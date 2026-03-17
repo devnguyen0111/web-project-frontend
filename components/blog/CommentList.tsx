@@ -1,39 +1,45 @@
 import Image from "next/image";
+import { Badge } from "@/components/ui";
 import type { Comment } from "@/lib/types";
 
 interface CommentItemProps {
   comment: Comment;
 }
 
-export function CommentItem({ comment }: CommentItemProps) {
+function CommentItem({ comment }: CommentItemProps) {
+  const indent = Math.max((comment.depth - 1) * 16, 0);
+
   return (
     <div
-      style={{ marginLeft: (comment.depth - 1) * 24, marginTop: 12 }}
-      className="flex gap-2 items-start"
+      style={{ marginLeft: indent }}
+      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
     >
-      {comment.author?.avatarUrl ? (
-        <Image
-          src={comment.author.avatarUrl}
-          alt={comment.author.fullName}
-          width={32}
-          height={32}
-          className="rounded-full object-cover"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-300" />
-      )}
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">
-            {comment.author?.fullName || "[Ẩn danh]"}
-          </span>
-          {comment.isEdited && (
-            <span className="text-xs text-gray-400">(đã sửa)</span>
-          )}
-        </div>
-        <div className="text-sm mt-1">{comment.content}</div>
-        <div className="text-xs text-gray-400 mt-1">
-          {new Date(comment.createdAt).toLocaleString()}
+      <div className="flex items-start gap-3">
+        {comment.author?.avatarUrl ? (
+          <Image
+            src={comment.author.avatarUrl}
+            alt={comment.author.fullName}
+            width={32}
+            height={32}
+            className="h-8 w-8 rounded-full border border-slate-200 object-cover"
+          />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs text-slate-500">
+            AN
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-slate-900">
+              {comment.author?.fullName ?? "Anonymous"}
+            </p>
+            {comment.isEdited ? <Badge>edited</Badge> : null}
+          </div>
+          <p className="break-words text-sm text-slate-700">{comment.content}</p>
+          <p className="text-xs text-slate-500">
+            {new Date(comment.createdAt).toLocaleString()}
+          </p>
         </div>
       </div>
     </div>
@@ -45,11 +51,10 @@ interface CommentListProps {
 }
 
 export function CommentList({ comments }: CommentListProps) {
-  // Hiển thị dạng phẳng, lồng nhau bằng margin theo depth
   return (
-    <div>
-      {comments.map((c) => (
-        <CommentItem key={c._id} comment={c} />
+    <div className="space-y-3">
+      {comments.map((comment) => (
+        <CommentItem key={comment._id} comment={comment} />
       ))}
     </div>
   );

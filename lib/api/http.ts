@@ -14,40 +14,103 @@ type RequestConfig = Omit<RequestInit, "body"> & {
   skipAuth?: boolean;
 };
 
+type ErrorEnvelope = {
+  message?: string | string[];
+  statusCode?: number;
+};
+
+export class ApiError extends Error {
+  statusCode?: number;
+  details?: unknown;
+
+  constructor(
+    message: string,
+    options?: {
+      statusCode?: number;
+      details?: unknown;
+    },
+  ) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = options?.statusCode;
+    this.details = options?.details;
+  }
+}
+
+let refreshPromise: Promise<string | null> | null = null;
+
 async function parseJson<T>(response: Response): Promise<ApiEnvelope<T>> {
-  const payload = (await response.json()) as ApiEnvelope<T> & {
-    message?: string;
-  };
+  if (response.status === 204) {
+    return { success: response.ok, data: undefined as unknown as T };
+  }
+
+  const text = await response.text();
+  if (!text) {
+    if (!response.ok) {
+      throw new ApiError("Request failed", { statusCode: response.status });
+    }
+
+    return { success: response.ok, data: undefined as unknown as T };
+  }
+
+  let payload: ApiEnvelope<T> & ErrorEnvelope;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    if (!response.ok) {
+      throw new ApiError("Request failed", { statusCode: response.status });
+    }
+    throw new ApiError("Failed to parse response from server");
+  }
 
   if (!response.ok) {
-    throw new Error(payload.message ?? "Request failed");
+    const message = Array.isArray(payload.message)
+      ? payload.message.join(", ")
+      : payload.message ?? "Request failed";
+
+    throw new ApiError(message, {
+      statusCode: payload.statusCode ?? response.status,
+      details: payload,
+    });
   }
 
   return payload;
 }
 
 async function refreshAccessToken() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return null;
+  if (refreshPromise) {
+    return refreshPromise;
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
-  });
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      return null;
+    }
 
-  if (!response.ok) {
-    clearTokens();
-    return null;
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      clearTokens();
+      return null;
+    }
+
+    const payload = await parseJson<AuthPayload>(response);
+    setTokens(payload.data.accessToken, payload.data.refreshToken);
+    return payload.data.accessToken;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
   }
-
-  const payload = (await response.json()) as ApiEnvelope<AuthPayload>;
-  setTokens(payload.data.accessToken, payload.data.refreshToken);
-  return payload.data.accessToken;
 }
 
 export async function apiRequest<T>(path: string, config: RequestConfig = {}) {

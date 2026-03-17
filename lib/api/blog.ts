@@ -4,6 +4,7 @@ import type {
   Comment,
   PaginatedResult,
   Poll,
+  PostBlock,
   Post,
   Tag,
 } from "@/lib/types";
@@ -20,14 +21,44 @@ interface PostsQuery {
 interface CreatePostPayload {
   title: string;
   excerpt?: string;
-  content: string;
+  blocks: PostBlock[];
   categoryId?: string;
   tagIds?: string[];
   poll?: {
     question: string;
     options: Array<{ text: string }>;
+    isPermanent?: boolean;
+    endsAt?: string;
   };
 }
+
+interface UpdatePostPayload {
+  title?: string;
+  excerpt?: string;
+  blocks?: PostBlock[];
+  categoryId?: string;
+  tagIds?: string[];
+  poll?: {
+    question: string;
+    options: Array<{ text: string }>;
+    isPermanent?: boolean;
+    endsAt?: string;
+  };
+}
+
+interface PostLikeStatus {
+  liked: boolean;
+  likesCount: number;
+}
+
+interface UploadedPostImage {
+  bucketName: string;
+  objectName: string;
+  etag: string;
+  url: string;
+}
+
+const inFlightPostBySlugRequests = new Map<string, Promise<Post>>();
 
 function buildQuery(query: PostsQuery) {
   const params = new URLSearchParams();
@@ -59,18 +90,50 @@ export async function listMyPosts(query: PostsQuery = {}) {
   return response.data;
 }
 
-export async function getPostBySlug(slug: string) {
-  const response = await apiRequest<Post>(`/posts/${slug}`, {
+export async function getMyPostDetail(postId: string) {
+  const response = await apiRequest<Post>(`/posts/me/${postId}`, {
     method: "GET",
-    skipAuth: true,
   });
 
   return response.data;
 }
 
+export async function getPostBySlug(slug: string) {
+  const inFlightRequest = inFlightPostBySlugRequests.get(slug);
+  if (inFlightRequest) {
+    return inFlightRequest;
+  }
+
+  const request = (async () => {
+    const response = await apiRequest<Post>(`/posts/${slug}`, {
+      method: "GET",
+      skipAuth: true,
+    });
+
+    return response.data;
+  })();
+
+  inFlightPostBySlugRequests.set(slug, request);
+
+  try {
+    return await request;
+  } finally {
+    inFlightPostBySlugRequests.delete(slug);
+  }
+}
+
 export async function createPost(payload: CreatePostPayload) {
   const response = await apiRequest<Post>("/posts", {
     method: "POST",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+export async function updatePost(postId: string, payload: UpdatePostPayload) {
+  const response = await apiRequest<Post>(`/posts/${postId}`, {
+    method: "PATCH",
     body: payload,
   });
 
@@ -93,6 +156,45 @@ export async function uploadPostCoverImage(postId: string, file: File) {
     method: "POST",
     body: formData,
   });
+
+  return response.data;
+}
+
+export async function deletePost(postId: string) {
+  const response = await apiRequest<{ message: string }>(`/posts/${postId}`, {
+    method: "DELETE",
+  });
+
+  return response.data;
+}
+
+export async function uploadPostBlockImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiRequest<UploadedPostImage>("/posts/block-image", {
+    method: "POST",
+    body: formData,
+  });
+
+  return response.data;
+}
+
+export async function togglePostLike(postId: string) {
+  const response = await apiRequest<PostLikeStatus>(`/posts/${postId}/like`, {
+    method: "POST",
+  });
+
+  return response.data;
+}
+
+export async function getPostLikeStatus(postId: string) {
+  const response = await apiRequest<PostLikeStatus>(
+    `/posts/${postId}/like-status`,
+    {
+      method: "GET",
+    },
+  );
 
   return response.data;
 }
@@ -168,6 +270,14 @@ export async function listPendingPosts(page = 1, limit = 10) {
       method: "GET",
     },
   );
+
+  return response.data;
+}
+
+export async function getPendingPostDetail(postId: string) {
+  const response = await apiRequest<Post>(`/moderation/posts/${postId}`, {
+    method: "GET",
+  });
 
   return response.data;
 }

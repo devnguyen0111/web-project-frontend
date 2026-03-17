@@ -1,13 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { CommentList } from "@/components/blog/CommentList";
 import { useParams } from "next/navigation";
+import { CommentList } from "@/components/blog/CommentList";
+import { PostBlockRenderer } from "@/components/blog/PostBlockRenderer";
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Spinner, Textarea } from "@/components/ui";
 import {
   createComment,
+  getPostLikeStatus,
   getPollResults,
   getPostBySlug,
   listComments,
+  togglePostLike,
   votePoll,
 } from "@/lib/api/blog";
 import { getAccessToken } from "@/lib/api/token-store";
@@ -23,6 +28,13 @@ export default function BlogDetailPage() {
   const [commentInput, setCommentInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [liked, setLiked] = useState<boolean | null>(null);
+  const [liking, setLiking] = useState(false);
+  const pollEndsAtMs = poll?.endsAt ? new Date(poll.endsAt).getTime() : null;
+  const isPollEnded =
+    pollEndsAtMs !== null && !Number.isNaN(pollEndsAtMs) && pollEndsAtMs <= Date.now();
+  const isPollPermanent = poll ? (poll.isPermanent ?? !poll.endsAt) : false;
 
   async function loadAll() {
     if (!slug) {
@@ -43,6 +55,25 @@ export default function BlogDetailPage() {
 
       setComments(commentsData.data);
       setPoll(pollData);
+
+      if (getAccessToken()) {
+        try {
+          const likeStatus = await getPostLikeStatus(postData._id);
+          setLiked(likeStatus.liked);
+          setPost((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  likesCount: likeStatus.likesCount,
+                }
+              : prev,
+          );
+        } catch {
+          setLiked(null);
+        }
+      } else {
+        setLiked(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load post");
     } finally {
@@ -55,15 +86,20 @@ export default function BlogDetailPage() {
       return;
     }
 
+    if (isPollEnded) {
+      setError("This poll has ended");
+      return;
+    }
+
     if (!getAccessToken()) {
-      setError("Please login before voting poll");
+      setError("Please login before voting");
       return;
     }
 
     try {
       await votePoll(post._id, optionIndex);
-      const nextPoll = await getPollResults(post._id);
-      setPoll(nextPoll);
+      const updatedPoll = await getPollResults(post._id);
+      setPoll(updatedPoll);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Vote failed");
     }
@@ -71,7 +107,6 @@ export default function BlogDetailPage() {
 
   async function handleComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     if (!post) {
       return;
     }
@@ -81,6 +116,7 @@ export default function BlogDetailPage() {
       return;
     }
 
+    setSubmittingComment(true);
     try {
       await createComment(post._id, commentInput);
       setCommentInput("");
@@ -88,6 +124,39 @@ export default function BlogDetailPage() {
       setComments(next.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Comment failed");
+    } finally {
+      setSubmittingComment(false);
+    }
+  }
+
+  async function handleToggleLike() {
+    if (!post) {
+      return;
+    }
+
+    if (!getAccessToken()) {
+      setError("Please login before liking");
+      return;
+    }
+
+    setLiking(true);
+    setError("");
+
+    try {
+      const next = await togglePostLike(post._id);
+      setLiked(next.liked);
+      setPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              likesCount: next.likesCount,
+            }
+          : prev,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Like action failed");
+    } finally {
+      setLiking(false);
     }
   }
 
@@ -97,89 +166,128 @@ export default function BlogDetailPage() {
   }, [slug]);
 
   if (loading) {
-    return <main className="mx-auto max-w-4xl px-4 py-8">Loading...</main>;
+    return (
+      <main className="section-shell flex min-h-[calc(100vh-8rem)] items-center justify-center py-10">
+        <Spinner label="Loading post" />
+      </main>
+    );
   }
 
   if (error && !post) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-8 text-red-600">{error}</main>
+      <main className="section-shell py-10">
+        <Card className="border-rose-200 bg-rose-50/80">
+          <CardContent className="p-4 text-sm text-rose-700">{error}</CardContent>
+        </Card>
+      </main>
     );
   }
 
   if (!post) {
-    return <main className="mx-auto max-w-4xl px-4 py-8">Post not found</main>;
+    return (
+      <main className="section-shell py-10">
+        <Card>
+          <CardContent className="p-4 text-sm text-slate-600">Post not found</CardContent>
+        </Card>
+      </main>
+    );
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8">
-      <article className="rounded-2xl border border-black/10 bg-white p-6">
-        {post.coverImageUrl ? (
-          <img
-            src={post.coverImageUrl}
-            alt={post.title}
-            className="mb-5 h-64 w-full rounded-xl object-cover"
-          />
-        ) : null}
-        <p className="text-xs uppercase tracking-wide text-cyan-700">
-          {post.status}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold text-slate-900">{post.title}</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Views: {post.views} | Likes: {post.likesCount} | Comments:{" "}
-          {post.commentsCount}
-        </p>
-        <div className="mt-6 whitespace-pre-wrap text-slate-800">
-          {post.content}
-        </div>
-      </article>
-
-      {poll ? (
-        <section className="mt-6 rounded-2xl border border-black/10 bg-white p-6">
-          <h2 className="text-xl font-semibold text-slate-900">Poll</h2>
-          <p className="mt-2 text-sm text-slate-700">{poll.question}</p>
-          <div className="mt-4 space-y-2">
-            {poll.options.map((option, index) => (
-              <button
-                key={`${option.text}-${index}`}
+    <main className="pb-14 pt-10">
+      <section className="section-shell space-y-6">
+        <Card className="overflow-hidden">
+          {post.coverImageUrl ? (
+            <div className="relative h-72 w-full">
+              <Image
+                src={post.coverImageUrl}
+                alt={post.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 900px"
+                className="object-cover"
+              />
+            </div>
+          ) : null}
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Badge className="w-fit">{post.status}</Badge>
+              <Button
                 type="button"
-                onClick={() => handleVote(index)}
-                className="flex w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-cyan-500"
+                variant={liked ? "secondary" : "outline"}
+                size="sm"
+                onClick={handleToggleLike}
+                disabled={liking}
               >
-                <span>{option.text}</span>
-                <span>{option.votes} votes</span>
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-slate-500">
-            Total votes: {poll.totalVotes}
-          </p>
-        </section>
-      ) : null}
+                {liking ? "Updating..." : liked ? "Liked" : "Like"} ({post.likesCount})
+              </Button>
+            </div>
+            <CardTitle className="text-2xl md:text-3xl">{post.title}</CardTitle>
+            <CardDescription>
+              By {post.author?.fullName ?? post.authorId} | {post.views} views | {post.likesCount} likes |{" "}
+              {post.commentsCount} comments
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PostBlockRenderer blocks={post.blocks ?? []} />
+          </CardContent>
+        </Card>
 
-      <section className="mt-6 rounded-2xl border border-black/10 bg-white p-6">
-        <h2 className="text-xl font-semibold text-slate-900">Comments</h2>
+        {poll ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Poll</CardTitle>
+              <CardDescription>{poll.question}</CardDescription>
+              <p className="text-xs text-slate-500">
+                {isPollPermanent
+                  ? "Permanent poll"
+                  : poll?.endsAt
+                    ? `Ends at ${new Date(poll.endsAt).toLocaleString()}`
+                    : "Poll schedule not set"}
+              </p>
+              {isPollEnded ? (
+                <p className="text-xs font-semibold text-amber-700">Poll closed</p>
+              ) : null}
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {poll.options.map((option, index) => (
+                <Button
+                  key={`${option.text}-${index}`}
+                  variant="outline"
+                  className="w-full justify-between"
+                  onClick={() => handleVote(index)}
+                  disabled={isPollEnded}
+                >
+                  <span>{option.text}</span>
+                  <span className="text-xs text-slate-500">{option.votes} votes</span>
+                </Button>
+              ))}
+              <p className="text-xs text-slate-500">Total votes: {poll.totalVotes}</p>
+            </CardContent>
+          </Card>
+        ) : null}
 
-        <form className="mt-4 space-y-3" onSubmit={handleComment}>
-          <textarea
-            value={commentInput}
-            onChange={(event) => setCommentInput(event.target.value)}
-            className="h-24 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
-            placeholder="Write your comment"
-            required
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-          >
-            Add comment
-          </button>
-        </form>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Comments</CardTitle>
+            <CardDescription>{comments.length} comments</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form className="space-y-3" onSubmit={handleComment}>
+              <Textarea
+                value={commentInput}
+                onChange={(event) => setCommentInput(event.target.value)}
+                placeholder="Write your comment"
+                required
+              />
+              <Button type="submit" disabled={submittingComment}>
+                {submittingComment ? "Posting..." : "Add comment"}
+              </Button>
+            </form>
 
-        {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-
-        <div className="mt-4">
-          <CommentList comments={comments} />
-        </div>
+            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+            <CommentList comments={comments} />
+          </CardContent>
+        </Card>
       </section>
     </main>
   );

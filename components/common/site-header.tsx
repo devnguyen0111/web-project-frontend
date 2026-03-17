@@ -1,97 +1,86 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/api/token-store";
-import { logout, me } from "@/lib/api/auth";
-import type { AuthUser } from "@/lib/types";
+import { usePathname, useRouter } from "next/navigation";
+import { Badge, Button, buttonVariants } from "@/components/ui";
+import { getNavbarLinks } from "@/lib/rbac";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 
 export function SiteHeader() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-
-  useEffect(() => {
-    const token = getAccessToken();
-
-    if (!token) {
-      return;
-    }
-
-    me()
-      .then((result) => setUser(result))
-      .catch(() => setUser(null));
-  }, []);
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout, initializing } = useAuth();
+  const links = getNavbarLinks(user?.role);
 
   async function handleLogout() {
     try {
       await logout();
-    } catch {
-      // Ignore API failures and still clear client-side state.
+    } finally {
+      router.push("/");
     }
-
-    setUser(null);
-    window.location.href = "/";
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-black/10 bg-white/85 backdrop-blur-lg">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 md:px-6">
-        <Link
-          href="/"
-          className="text-xl font-bold tracking-tight text-slate-900"
-        >
-          Web Project
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
+      <div className="section-shell flex h-16 items-center justify-between gap-3">
+        <Link href="/" className="flex items-center gap-2 text-slate-900">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500 text-sm font-bold text-white">
+            WP
+          </span>
+          <span className="text-sm font-semibold tracking-wide sm:text-base">
+            Web Project
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-3 text-sm font-medium text-slate-700">
-          <Link
-            href="/blog"
-            className="rounded-md px-3 py-2 hover:bg-slate-100"
-          >
-            Blog
-          </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-md px-3 py-2 hover:bg-slate-100"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/admin"
-            className="rounded-md px-3 py-2 hover:bg-slate-100"
-          >
-            Moderation
-          </Link>
+        <nav className="hidden items-center gap-2 md:flex">
+          {links.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "h-9 rounded-lg text-xs uppercase tracking-[0.08em]",
+                pathname.startsWith(item.href) ? "bg-slate-100 text-slate-900" : "",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-          {user ? (
+        <div className="flex items-center gap-2">
+          {initializing ? (
+            <span className="text-xs text-slate-500">Loading...</span>
+          ) : user ? (
             <>
-              <span className="rounded-md bg-amber-100 px-3 py-2 text-xs text-amber-900">
-                {user.fullName} ({user.role})
+              <Badge variant="accent" className="hidden sm:inline-flex">
+                {user.role}
+              </Badge>
+              <span className="hidden text-sm text-slate-700 sm:inline-block">
+                {user.fullName}
               </span>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-md bg-slate-900 px-3 py-2 text-xs text-white hover:bg-slate-700"
-              >
+              <Button size="sm" variant="outline" onClick={handleLogout}>
                 Logout
-              </button>
+              </Button>
             </>
           ) : (
             <>
               <Link
                 href="/login"
-                className="rounded-md border border-slate-300 px-3 py-2 text-xs hover:bg-slate-100"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 Login
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-slate-900 px-3 py-2 text-xs text-white hover:bg-slate-700"
+                className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 Register
               </Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );

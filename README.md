@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Web Project Frontend
 
-## Getting Started
+Next.js 16.1.6 App Router powered by React 19, TypeScript 5, Tailwind 4, and the Base UI primitives. The repo consumes the same backend APIs as the NestJS phase-1/phase-2 services (auth, users, posts, moderation) and focuses on a responsive public blog + authenticated dashboard experience.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The project ships with shared globals (`app/globals.css`), a site header, and an auth-aware layout so that every page can access the session provider and guard hooks.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `pnpm dev` - start Next.js in development mode with Webpack (stable default).
+- `pnpm dev:turbo` - start Next.js dev server with Turbopack (faster, may be less stable on some setups).
+- `pnpm build` - compile the production build (used by CI and deployments).
+- `pnpm lint` - run ESLint over the app and lib folders.
+- `pnpm test` - execute the Vitest suite.
+- `pnpm test:watch` - run Vitest in watch mode while editing tests.
 
-## Learn More
+## Testing & Quality
 
-To learn more about Next.js, take a look at the following resources:
+The Vitest configuration lives alongside the repo (`vitest.config.ts`) and currently covers shared utilities (e.g., `cn`). Tests read the same path aliases as the app thanks to `vite-tsconfig-paths`. The quality gate enforces `lint`, `build`, and `test` via GitHub Actions (`.github/workflows/frontend-ci.yml`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run the full gate locally with:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint && pnpm build && pnpm test
+```
 
-## Deploy on Vercel
+Any additions to the frontend should keep these pipelines green before merging.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Architecture notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `lib/api/*` hosts the API helpers that talk to backend routes.
+- `app/(auth)` contains the login/register flows guarded by the auth provider.
+- `app/(main)` and `app/(dashboard)` live under explicit route groups so their layouts and guards can stay separate.
+- Global tokens and session helpers live under `lib/api/token-store.ts` and will continue to evolve with server-side guard layers.
+
+Happy coding.

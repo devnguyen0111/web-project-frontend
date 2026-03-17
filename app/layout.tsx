@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/common/site-header";
+import { AuthProvider } from "@/providers/auth-provider";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -28,8 +29,10 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${newsreader.variable} antialiased`}
       >
-        <SiteHeader />
-        {children}
+        <AuthProvider>
+          <SiteHeader />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

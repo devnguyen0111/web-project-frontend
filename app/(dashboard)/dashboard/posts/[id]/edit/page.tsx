@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { PostBlockEditor } from "@/components/blog/PostBlockEditor";
 import { PostBlockRenderer } from "@/components/blog/PostBlockRenderer";
 import {
@@ -15,12 +17,13 @@ import {
   Input,
   Label,
   Select,
+  Spinner,
 } from "@/components/ui";
 import {
-  createPost,
+  getMyPostDetail,
   listCategories,
   listTags,
-  submitPost,
+  updatePost,
   uploadPostBlockImage,
   uploadPostCoverImage,
 } from "@/lib/api/blog";
@@ -33,7 +36,24 @@ const MAX_POLL_OPTIONS = 6;
 const MIN_POLL_OPTIONS = 2;
 type PollMode = "none" | "permanent" | "scheduled";
 
-export default function NewPostPage() {
+function toLocalDatetimeInputValue(value?: string): string {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const localTimestamp = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localTimestamp.toISOString().slice(0, 16);
+}
+
+export default function EditPostPage() {
+  const params = useParams<{ id: string }>();
+  const postId = useMemo(() => params?.id ?? "", [params]);
+
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [blocks, setBlocks] = useState<PostBlock[]>(() => [createEmptyPostBlock("paragraph")]);
@@ -47,10 +67,12 @@ export default function NewPostPage() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollEndsAt, setPollEndsAt] = useState("");
+  const [currentStatus, setCurrentStatus] = useState("");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
 
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
@@ -83,6 +105,49 @@ export default function NewPostPage() {
     };
   }, [coverImage]);
 
+  useEffect(() => {
+    if (!postId) {
+      setLoading(false);
+      setError("Post id is missing");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    getMyPostDetail(postId)
+      .then((post) => {
+        setTitle(post.title ?? "");
+        setExcerpt(post.excerpt ?? "");
+        setBlocks(post.blocks && post.blocks.length > 0 ? post.blocks : [createEmptyPostBlock("paragraph")]);
+        setCategoryId(post.categoryId ?? "");
+        setTagIds(post.tags ?? []);
+        setCoverImageUrl(post.coverImageUrl ?? "");
+        setCurrentStatus(post.status);
+
+        if (post.poll) {
+          const isPermanent = post.poll.isPermanent ?? !post.poll.endsAt;
+          setPollMode(isPermanent ? "permanent" : "scheduled");
+          setPollQuestion(post.poll.question ?? "");
+          setPollOptions(
+            post.poll.options && post.poll.options.length >= MIN_POLL_OPTIONS
+              ? post.poll.options.map((option) => option.text ?? "")
+              : ["", ""],
+          );
+          setPollEndsAt(isPermanent ? "" : toLocalDatetimeInputValue(post.poll.endsAt));
+        } else {
+          setPollMode("none");
+          setPollQuestion("");
+          setPollOptions(["", ""]);
+          setPollEndsAt("");
+        }
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load post detail");
+      })
+      .finally(() => setLoading(false));
+  }, [postId]);
+
   function toggleTag(id: string) {
     setTagIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
@@ -113,7 +178,6 @@ export default function NewPostPage() {
     }
 
     setCoverImage(file);
-    setCoverImageUrl("");
   }
 
   function clearCoverSelection() {
@@ -150,6 +214,10 @@ export default function NewPostPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!postId) {
+      return;
+    }
+
     setSaving(true);
     setError("");
     setResult("");
@@ -226,7 +294,7 @@ export default function NewPostPage() {
         }
       }
 
-      const created = await createPost({
+      const updated = await updatePost(postId, {
         title,
         excerpt,
         blocks: normalizedBlocks,
@@ -236,41 +304,52 @@ export default function NewPostPage() {
       });
 
       if (coverImage) {
-        const withCover = await uploadPostCoverImage(created._id, coverImage);
-        setCoverImageUrl(withCover.coverImageUrl ?? "");
-      } else {
-        setCoverImageUrl("");
+        const withCover = await uploadPostCoverImage(postId, coverImage);
+        setCoverImageUrl(withCover.coverImageUrl ?? coverImageUrl);
       }
 
-      await submitPost(created._id);
-      setResult("Post created and submitted for moderation");
-      setTitle("");
-      setExcerpt("");
-      setBlocks([createEmptyPostBlock("paragraph")]);
-      setTagIds([]);
-      setCategoryId("");
+      setCurrentStatus(updated.status);
+      setResult(
+        updated.status === "pending"
+          ? "Post updated and moved to moderation queue"
+          : "Post updated successfully",
+      );
       setCoverImage(null);
       setCoverInputKey((current) => current + 1);
-      setPollMode("none");
-      setPollQuestion("");
-      setPollOptions(["", ""]);
-      setPollEndsAt("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create post failed");
+      setError(err instanceof Error ? err.message : "Update post failed");
     } finally {
       setSaving(false);
     }
   }
 
+  if (loading) {
+    return (
+      <main className="section-shell flex min-h-[calc(100vh-8rem)] items-center justify-center py-10">
+        <Spinner label="Loading post detail" />
+      </main>
+    );
+  }
+
   return (
     <main className="pb-14 pt-10">
-      <section className="section-shell">
+      <section className="section-shell space-y-6">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/dashboard"
+            className="text-sm font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Back to dashboard
+          </Link>
+          {currentStatus ? <Badge>{currentStatus}</Badge> : null}
+        </div>
+
         <Card>
           <CardHeader>
             <Badge className="w-fit">Author studio</Badge>
-            <CardTitle>Create new post</CardTitle>
+            <CardTitle>Edit post</CardTitle>
             <CardDescription>
-              Compose content with block editor, upload optional cover image, then submit for moderation.
+              Author edits will move non-draft posts back to moderation queue.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -436,7 +515,6 @@ export default function NewPostPage() {
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleCoverImageChange}
                 />
-                <p className="text-xs text-slate-500">Choose image, preview below, then click create to upload.</p>
                 {coverImagePreviewUrl ? (
                   <div className="relative h-52 w-full overflow-hidden rounded-xl border border-slate-200">
                     <Image
@@ -453,7 +531,7 @@ export default function NewPostPage() {
                   <div className="relative h-52 w-full overflow-hidden rounded-xl border border-slate-200">
                     <Image
                       src={coverImageUrl}
-                      alt="Uploaded cover"
+                      alt="Current cover"
                       fill
                       sizes="(max-width: 1024px) 100vw, 700px"
                       className="object-cover"
@@ -474,7 +552,7 @@ export default function NewPostPage() {
               {result ? <p className="text-sm text-emerald-700">{result}</p> : null}
 
               <Button type="submit" disabled={saving}>
-                {saving ? "Submitting..." : "Create and submit"}
+                {saving ? "Saving..." : "Save changes"}
               </Button>
             </form>
           </CardContent>

@@ -19,6 +19,7 @@ export interface AuthUser {
   fullName: string;
   email: string;
   role: Role;
+  isEmailVerified: boolean;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -28,6 +29,17 @@ export interface AuthPayload {
   user: AuthUser;
   accessToken: string;
   refreshToken: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+  requiresEmailVerification: boolean;
+  user: AuthUser;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  user: AuthUser;
 }
 
 export interface Category {
@@ -56,16 +68,87 @@ export interface Poll {
   question: string;
   options: PollOption[];
   totalVotes: number;
+  isPermanent?: boolean;
+  endsAt?: string;
+}
+
+export type PostBlockType =
+  | "paragraph"
+  | "heading"
+  | "quote"
+  | "list"
+  | "image"
+  | "code";
+
+export type PostListStyle = "ordered" | "unordered";
+export type PostImageSize = "small" | "medium" | "large";
+
+export interface PostParagraphBlock {
+  id?: string;
+  type: "paragraph";
+  text: string;
+}
+
+export interface PostHeadingBlock {
+  id?: string;
+  type: "heading";
+  text: string;
+  level: 1 | 2 | 3 | 4;
+}
+
+export interface PostQuoteBlock {
+  id?: string;
+  type: "quote";
+  text: string;
+}
+
+export interface PostListBlock {
+  id?: string;
+  type: "list";
+  style: PostListStyle;
+  items: string[];
+}
+
+export interface PostImageBlock {
+  id?: string;
+  type: "image";
+  url: string;
+  alt?: string;
+  caption?: string;
+  size?: PostImageSize;
+}
+
+export interface PostCodeBlock {
+  id?: string;
+  type: "code";
+  code: string;
+  language?: string;
+}
+
+export type PostBlock =
+  | PostParagraphBlock
+  | PostHeadingBlock
+  | PostQuoteBlock
+  | PostListBlock
+  | PostImageBlock
+  | PostCodeBlock;
+
+export interface PostAuthor {
+  id: string;
+  fullName: string;
+  avatarUrl?: string;
 }
 
 export interface Post {
   _id: string;
   authorId: string;
+  author?: PostAuthor | null;
   title: string;
   slug: string;
   excerpt?: string;
   coverImageUrl?: string;
-  content: string;
+  blocks?: PostBlock[];
+  searchText?: string;
   categoryId?: string;
   tags: string[];
   status: "draft" | "pending" | "published" | "rejected" | "archived";

@@ -1,8 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select, Spinner } from "@/components/ui";
 import { listCategories, listPublishedPosts, listTags } from "@/lib/api/blog";
+import { getPostPreviewText } from "@/lib/post-blocks";
 import type { Category, Post, Tag } from "@/lib/types";
 
 export default function BlogListPage() {
@@ -50,95 +53,109 @@ export default function BlogListPage() {
   }, []);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
-      <section className="rounded-2xl border border-black/10 bg-white p-5">
-        <h1 className="text-2xl font-bold text-slate-900">Published posts</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Connected to backend endpoint GET /posts with filters.
-        </p>
+    <main className="pb-14 pt-10">
+      <section className="section-shell space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Published blog posts</CardTitle>
+            <CardDescription>
+              Filter by keyword, category, and tag. Data source is GET /posts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="search">Search</Label>
+                <Input
+                  id="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Title or block content keyword"
+                />
+              </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search title or content"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500 md:col-span-2"
-          />
+              <div className="space-y-1.5">
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  id="category"
+                  value={categoryId}
+                  onChange={(event) => setCategoryId(event.target.value)}
+                >
+                  <option value="">All categories</option>
+                  {categories.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
 
-          <select
-            value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
-          >
-            <option value="">All categories</option>
-            {categories.map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={tagId}
-            onChange={(event) => setTagId(event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
-          >
-            <option value="">All tags</option>
-            {tags.map((item) => (
-              <option key={item._id} value={item._id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <button
-          type="button"
-          onClick={loadPosts}
-          className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-        >
-          Apply filters
-        </button>
-      </section>
-
-      {loading ? <p className="mt-6 text-slate-600">Loading posts...</p> : null}
-      {error ? <p className="mt-6 text-red-600">{error}</p> : null}
-
-      <section className="mt-6 grid gap-4 md:grid-cols-2">
-        {posts.map((post) => (
-          <article
-            key={post._id}
-            className="rounded-2xl border border-black/10 bg-white p-5"
-          >
-            {post.coverImageUrl ? (
-              <img
-                src={post.coverImageUrl}
-                alt={post.title}
-                className="mb-3 h-44 w-full rounded-lg object-cover"
-              />
-            ) : null}
-            <p className="text-xs uppercase tracking-wide text-cyan-700">
-              {post.status}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-900">
-              {post.title}
-            </h2>
-            <p className="mt-2 line-clamp-3 text-sm text-slate-600">
-              {post.excerpt || post.content}
-            </p>
-            <div className="mt-3 flex gap-3 text-xs text-slate-500">
-              <span>{post.views} views</span>
-              <span>{post.likesCount} likes</span>
-              <span>{post.commentsCount} comments</span>
+              <div className="space-y-1.5">
+                <Label htmlFor="tag">Tag</Label>
+                <Select id="tag" value={tagId} onChange={(event) => setTagId(event.target.value)}>
+                  <option value="">All tags</option>
+                  {tags.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
             </div>
-            <Link
-              href={`/blog/${post.slug}`}
-              className="mt-4 inline-block rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-500"
-            >
-              Read detail
-            </Link>
-          </article>
-        ))}
+
+            <Button onClick={loadPosts} disabled={loading}>
+              {loading ? "Applying filters..." : "Apply filters"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {error ? (
+          <Card className="border-rose-200 bg-rose-50/80">
+            <CardContent className="p-4 text-sm text-rose-700">{error}</CardContent>
+          </Card>
+        ) : null}
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Spinner label="Loading posts" />
+          </div>
+        ) : null}
+
+        <div className="grid gap-5 md:grid-cols-2">
+          {posts.map((post) => (
+            <Card key={post._id} className="overflow-hidden">
+              {post.coverImageUrl ? (
+                <div className="relative h-52 w-full">
+                  <Image
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+              ) : null}
+              <CardContent className="space-y-3 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                  {post.status}
+                </p>
+                <h2 className="text-lg font-semibold text-slate-900">{post.title}</h2>
+                <p className="line-clamp-3 text-sm text-slate-600">
+                  {getPostPreviewText(post)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {post.views} views | {post.likesCount} likes | {post.commentsCount} comments
+                </p>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Read detail
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
     </main>
   );
