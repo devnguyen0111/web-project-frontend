@@ -2,6 +2,26 @@
 
 Next.js 16.1.6 App Router powered by React 19, TypeScript 5, Tailwind 4, and the Base UI primitives. The repo consumes the same backend APIs as the NestJS phase-1/phase-2 services (auth, users, posts, moderation) and focuses on a responsive public blog + authenticated dashboard experience.
 
+## Progress Snapshot (Updated: 2026-03-18)
+
+### Completed
+
+- [x] App Router structure finalized with route groups: `app/(auth)`, `app/(main)`, `app/(dashboard)`.
+- [x] Auth flow UI integrated end-to-end: register, login, verify email, forgot password, reset password.
+- [x] Session layer implemented with `AuthProvider`, role-based guards, and auto token refresh in `lib/api/http.ts`.
+- [x] Public blog pages integrated: list + filter, detail page, block rendering, comments list/create, poll vote/results, post like.
+- [x] Author dashboard integrated: my post list, create post, edit post, profile update, avatar upload.
+- [x] Moderation UI integrated for `staff/admin`: pending queue, approve/reject, pending detail, delete published posts.
+- [x] Reusable UI kit and post block editor in place (`components/ui`, `components/blog`).
+- [x] Frontend quality gate available with CI workflow (`.github/workflows/frontend-ci.yml`) and Vitest unit tests.
+
+### Pending / Next
+
+- [ ] Bookmark flow is not wired in UI yet (backend endpoint exists, frontend interaction missing).
+- [ ] Comment edit/delete/reply/hide moderation actions are not exposed in current UI.
+- [ ] Admin user-management screen is not implemented yet (API helper `listUsers` exists but no page consumes it).
+- [ ] Blog/dashboard pagination UX is still basic (current screens mostly load first page with fixed limits).
+
 ## Getting started
 
 ```bash
