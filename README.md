@@ -97,12 +97,11 @@ Checked on `2026-03-18`:
 
 - `pnpm lint` passed.
 - `pnpm test` passed.
-- `pnpm build` failed during static generation on `/blog`.
+- `pnpm build` passed.
 
 ## Troubleshooting
 
-- Build fails with `useSearchParams() should be wrapped in a suspense boundary at page "/blog"`: the current branch still needs a `Suspense` boundary around the blog list/search-param usage.
+- If build fails with `useSearchParams() should be wrapped in a suspense boundary`, wrap the component using `useSearchParams()` with `Suspense` in the page boundary.
 - API requests fail or return 401/404: confirm the backend is running and `NEXT_PUBLIC_API_BASE_URL` points to the correct base URL.
 - Login keeps redirecting to verification: verify the email first, then log in again.
 - Images do not load: check the backend image URLs and Next.js remote image configuration.
-
