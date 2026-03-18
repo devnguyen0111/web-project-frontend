@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { PaginationControls } from "@/components/common/pagination-controls";
 import { MotionDiv, MotionSection } from "@/components/motion";
@@ -19,7 +20,7 @@ function parsePage(value: string | null) {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 1;
 }
 
-export default function BlogListPage() {
+function BlogListPageContent() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -285,5 +286,23 @@ export default function BlogListPage() {
         </div>
       </MotionSection>
     </main>
+  );
+}
+
+export default function BlogListPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="pb-14 pt-10">
+          <section className="section-shell">
+            <div className="flex justify-center py-8">
+              <Spinner label="Loading posts" />
+            </div>
+          </section>
+        </main>
+      }
+    >
+      <BlogListPageContent />
+    </Suspense>
   );
 }
