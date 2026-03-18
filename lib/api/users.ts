@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api/http";
-import type { AuthUser, PaginatedResult } from "@/lib/types";
+import type { AuthUser, PaginatedResult, Role } from "@/lib/types";
 
 interface UpdateProfilePayload {
   fullName?: string;
@@ -42,6 +42,50 @@ export async function listUsers(page = 1, limit = 10) {
       method: "GET",
     },
   );
+
+  return response.data;
+}
+
+interface UpdateUserRolePayload {
+  role: Role;
+}
+
+export async function updateUserRole(userId: string, payload: UpdateUserRolePayload) {
+  const response = await apiRequest<AuthUser>(`/users/${userId}/role`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+interface UpdateUserStatusPayload {
+  isActive: boolean;
+}
+
+export async function updateUserStatus(userId: string, payload: UpdateUserStatusPayload) {
+  const response = await apiRequest<AuthUser>(`/users/${userId}/status`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+interface UpdateUserByAdminPayload {
+  fullName?: string;
+  email?: string;
+  isEmailVerified?: boolean;
+}
+
+export async function updateUserByAdmin(
+  userId: string,
+  payload: UpdateUserByAdminPayload,
+) {
+  const response = await apiRequest<AuthUser>(`/users/${userId}`, {
+    method: "PATCH",
+    body: payload,
+  });
 
   return response.data;
 }

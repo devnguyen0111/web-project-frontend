@@ -29,6 +29,11 @@ describe("rbac helpers", () => {
     expect(getNavbarLinks("staff").map((item) => item.href)).toEqual([
       "/blog",
       "/dashboard",
+      "/staff",
+    ]);
+    expect(getNavbarLinks("admin").map((item) => item.href)).toEqual([
+      "/blog",
+      "/dashboard",
       "/admin",
     ]);
   });

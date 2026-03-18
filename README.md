@@ -1,62 +1,108 @@
 # Web Project Frontend
 
-Next.js 16.1.6 App Router powered by React 19, TypeScript 5, Tailwind 4, and the Base UI primitives. The repo consumes the same backend APIs as the NestJS phase-1/phase-2 services (auth, users, posts, moderation) and focuses on a responsive public blog + authenticated dashboard experience.
+Next.js App Router frontend for auth, public blog, author dashboard, staff moderation, and admin management. The app uses React 19, TypeScript, Tailwind CSS 4, shadcn/ui-style primitives, and Framer Motion.
 
-## Progress Snapshot (Updated: 2026-03-18)
+## Quick Start
 
-### Completed
-
-- [x] App Router structure finalized with route groups: `app/(auth)`, `app/(main)`, `app/(dashboard)`.
-- [x] Auth flow UI integrated end-to-end: register, login, verify email, forgot password, reset password.
-- [x] Session layer implemented with `AuthProvider`, role-based guards, and auto token refresh in `lib/api/http.ts`.
-- [x] Public blog pages integrated: list + filter, detail page, block rendering, comments list/create, poll vote/results, post like.
-- [x] Author dashboard integrated: my post list, create post, edit post, profile update, avatar upload.
-- [x] Moderation UI integrated for `staff/admin`: pending queue, approve/reject, pending detail, delete published posts.
-- [x] Reusable UI kit and post block editor in place (`components/ui`, `components/blog`).
-- [x] Frontend quality gate available with CI workflow (`.github/workflows/frontend-ci.yml`) and Vitest unit tests.
-
-### Pending / Next
-
-- [ ] Bookmark flow is not wired in UI yet (backend endpoint exists, frontend interaction missing).
-- [ ] Comment edit/delete/reply/hide moderation actions are not exposed in current UI.
-- [ ] Admin user-management screen is not implemented yet (API helper `listUsers` exists but no page consumes it).
-- [ ] Blog/dashboard pagination UX is still basic (current screens mostly load first page with fixed limits).
-
-## Getting started
-
-```bash
+```powershell
+# from G:\FPT-Work\Vua-Project\web-project-frontend
+Copy-Item .env.example .env.local
 pnpm install
 pnpm dev
 ```
 
-The project ships with shared globals (`app/globals.css`), a site header, and an auth-aware layout so that every page can access the session provider and guard hooks.
+The app expects the backend API at:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
+```
+
+If your backend runs elsewhere, update `.env.local` before starting the frontend.
 
 ## Scripts
 
-- `pnpm dev` - start Next.js in development mode with Webpack (stable default).
-- `pnpm dev:turbo` - start Next.js dev server with Turbopack (faster, may be less stable on some setups).
-- `pnpm build` - compile the production build (used by CI and deployments).
-- `pnpm lint` - run ESLint over the app and lib folders.
-- `pnpm test` - execute the Vitest suite.
-- `pnpm test:watch` - run Vitest in watch mode while editing tests.
+- `pnpm dev` - start the Next.js dev server with Webpack.
+- `pnpm dev:turbo` - start the dev server with Turbopack.
+- `pnpm build` - create a production build.
+- `pnpm start` - run the production server after `pnpm build`.
+- `pnpm lint` - run ESLint.
+- `pnpm test` - run Vitest once.
+- `pnpm test:watch` - run Vitest in watch mode.
 
-## Testing & Quality
+## App Map
 
-The Vitest configuration lives alongside the repo (`vitest.config.ts`) and currently covers shared utilities (e.g., `cn`). Tests read the same path aliases as the app thanks to `vite-tsconfig-paths`. The quality gate enforces `lint`, `build`, and `test` via GitHub Actions (`.github/workflows/frontend-ci.yml`).
+### Public
 
-Run the full gate locally with:
+- `/` - landing page with links to blog and dashboard.
+- `/blog` - published post list with search, category filter, tag filter, and pagination.
+- `/blog/[slug]` - post detail with block rendering, likes, bookmarks, comments, replies, edit/delete/hide comment actions, and poll voting.
 
-```bash
-pnpm lint && pnpm build && pnpm test
-```
+### Auth
 
-Any additions to the frontend should keep these pipelines green before merging.
+- `/login`
+- `/register`
+- `/verify-email`
+- `/forgot-password`
+- `/reset-password`
 
-## Architecture notes
+Auth flow in the UI:
 
-- `lib/api/*` hosts the API helpers that talk to backend routes.
-- `app/(auth)` contains the login/register flows guarded by the auth provider.
-- `app/(main)` and `app/(dashboard)` live under explicit route groups so their layouts and guards can stay separate.
-- Global tokens and session helpers live under `lib/api/token-store.ts` and will continue to evolve with server-side guard layers.
+- Register -> verify email with a 6-digit code.
+- Login -> redirects unverified users to email verification.
+- Forgot password -> request reset code.
+- Reset password -> submit email, code, and new password.
 
-Happy coding.
+### Dashboard
+
+- `/dashboard` - author workspace with profile snapshot and my posts list.
+- `/dashboard/posts/new` - create a post, upload cover/block images, add category/tags, and submit for moderation.
+- `/dashboard/posts/[id]/edit` - edit an existing post and send it back to moderation if needed.
+- `/dashboard/profile` - update full name and upload avatar.
+
+### Staff
+
+- `/staff` - moderation queue for pending and published posts.
+- `/staff/posts/[id]` - pending post detail view with approve/reject actions.
+- `/staff/taxonomy` - category and tag CRUD shared with admin access.
+
+### Admin
+
+- `/admin` - control center.
+- `/admin/users` - user management, role changes, enable/disable, and profile edits.
+- `/admin/taxonomy` - category and tag CRUD.
+- `/admin/posts/[id]` - pending post detail view for moderation.
+
+## Role Access
+
+The navigation and guards follow the role helpers in `lib/rbac.ts`:
+
+- `author`, `staff`, `admin` can access `/dashboard`.
+- `staff`, `admin` can access moderation and taxonomy screens.
+- `admin` can access `/admin` and `/admin/users`.
+
+## Project Structure
+
+- `app/` - route groups for auth, public pages, dashboard, staff, and admin.
+- `components/common` - shared layout pieces such as the site header and pagination.
+- `components/blog` - blog-specific editor, renderer, comments, and post UI.
+- `components/motion` - shared Framer Motion wrappers and route transitions.
+- `components/ui` - reusable UI primitives.
+- `lib/api` - backend API clients for auth, users, and blog.
+- `lib/rbac.ts` - role checks and nav link selection.
+- `providers/` - auth and motion providers wired in `app/layout.tsx`.
+
+## Verification Status
+
+Checked on `2026-03-18`:
+
+- `pnpm lint` passed.
+- `pnpm test` passed.
+- `pnpm build` failed during static generation on `/blog`.
+
+## Troubleshooting
+
+- Build fails with `useSearchParams() should be wrapped in a suspense boundary at page "/blog"`: the current branch still needs a `Suspense` boundary around the blog list/search-param usage.
+- API requests fail or return 401/404: confirm the backend is running and `NEXT_PUBLIC_API_BASE_URL` points to the correct base URL.
+- Login keeps redirecting to verification: verify the email first, then log in again.
+- Images do not load: check the backend image URLs and Next.js remote image configuration.
+

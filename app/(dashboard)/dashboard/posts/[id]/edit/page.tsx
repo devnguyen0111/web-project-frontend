@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { PostBlockEditor } from "@/components/blog/PostBlockEditor";
 import { PostBlockRenderer } from "@/components/blog/PostBlockRenderer";
+import { MotionDiv, MotionSection } from "@/components/motion";
 import {
   Badge,
   Button,
@@ -34,6 +35,7 @@ const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
 const MAX_POLL_OPTIONS = 6;
 const MIN_POLL_OPTIONS = 2;
+const smoothEase = [0.22, 1, 0.36, 1] as const;
 type PollMode = "none" | "permanent" | "scheduled";
 
 function toLocalDatetimeInputValue(value?: string): string {
@@ -333,8 +335,18 @@ export default function EditPostPage() {
 
   return (
     <main className="pb-14 pt-10">
-      <section className="section-shell space-y-6">
-        <div className="flex items-center justify-between">
+      <MotionSection
+        className="section-shell space-y-6"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.34, ease: smoothEase }}
+      >
+        <MotionDiv
+          className="flex items-center justify-between"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: smoothEase }}
+        >
           <Link
             href="/dashboard"
             className="text-sm font-semibold text-slate-700 hover:text-slate-900"
@@ -342,18 +354,23 @@ export default function EditPostPage() {
             Back to dashboard
           </Link>
           {currentStatus ? <Badge>{currentStatus}</Badge> : null}
-        </div>
+        </MotionDiv>
 
-        <Card>
-          <CardHeader>
-            <Badge className="w-fit">Author studio</Badge>
-            <CardTitle>Edit post</CardTitle>
-            <CardDescription>
-              Author edits will move non-draft posts back to moderation queue.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-5" onSubmit={handleSubmit}>
+        <MotionDiv
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.04, ease: smoothEase }}
+        >
+          <Card>
+            <CardHeader>
+              <Badge className="w-fit">Author studio</Badge>
+              <CardTitle>Edit post</CardTitle>
+              <CardDescription>
+                Author edits will move non-draft posts back to moderation queue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5 md:col-span-2">
                   <Label htmlFor="title">Title</Label>
@@ -554,10 +571,11 @@ export default function EditPostPage() {
               <Button type="submit" disabled={saving}>
                 {saving ? "Saving..." : "Save changes"}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </section>
+              </form>
+            </CardContent>
+          </Card>
+        </MotionDiv>
+      </MotionSection>
     </main>
   );
 }

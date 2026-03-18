@@ -16,7 +16,7 @@ describe("blog api", () => {
   });
 
   it("dedupes in-flight getPostBySlug requests for the same slug", async () => {
-    let resolveFetch: ((value: Response) => void) | null = null;
+    let resolveFetch!: (value: Response) => void;
     const pendingResponse = new Promise<Response>((resolve) => {
       resolveFetch = resolve;
     });
@@ -29,13 +29,13 @@ describe("blog api", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    resolveFetch?.(
+    resolveFetch(
       createPostEnvelope({
         _id: "post-1",
         authorId: "author-1",
         title: "Strict mode dedupe",
         slug: "strict-mode-dedupe",
-        content: "content",
+        blocks: [{ type: "paragraph", text: "content" }],
         tags: [],
         status: "published",
         views: 10,

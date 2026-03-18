@@ -20,8 +20,12 @@ export function getNavbarLinks(role?: Role | null): NavLink[] {
     links.push({ href: "/dashboard", label: "Dashboard" });
   }
 
-  if (canAccessModeration(role)) {
-    links.push({ href: "/admin", label: "Moderation" });
+  if (role === "staff") {
+    links.push({ href: "/staff", label: "Staff" });
+  }
+
+  if (role === "admin") {
+    links.push({ href: "/admin", label: "Admin" });
   }
 
   return links;

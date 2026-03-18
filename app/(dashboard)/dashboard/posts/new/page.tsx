@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { PostBlockEditor } from "@/components/blog/PostBlockEditor";
 import { PostBlockRenderer } from "@/components/blog/PostBlockRenderer";
+import { MotionDiv, MotionSection } from "@/components/motion";
 import {
   Badge,
   Button,
@@ -31,6 +32,7 @@ const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
 const MAX_POLL_OPTIONS = 6;
 const MIN_POLL_OPTIONS = 2;
+const smoothEase = [0.22, 1, 0.36, 1] as const;
 type PollMode = "none" | "permanent" | "scheduled";
 
 export default function NewPostPage() {
@@ -264,8 +266,18 @@ export default function NewPostPage() {
 
   return (
     <main className="pb-14 pt-10">
-      <section className="section-shell">
-        <Card>
+      <MotionSection
+        className="section-shell"
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.34, ease: smoothEase }}
+      >
+        <MotionDiv
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.04, ease: smoothEase }}
+        >
+          <Card>
           <CardHeader>
             <Badge className="w-fit">Author studio</Badge>
             <CardTitle>Create new post</CardTitle>
@@ -479,7 +491,8 @@ export default function NewPostPage() {
             </form>
           </CardContent>
         </Card>
-      </section>
+        </MotionDiv>
+      </MotionSection>
     </main>
   );
 }

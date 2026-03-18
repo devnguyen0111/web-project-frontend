@@ -66,6 +66,10 @@
     border: 1px solid rgba(148, 163, 184, 0.22);
     box-shadow: 0 22px 45px rgba(15, 23, 42, 0.09);
     border-radius: var(--radius-lg);
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms ease;
   }
 
   .glass-panel {
@@ -74,6 +78,10 @@
     box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
     backdrop-filter: blur(14px);
     border-radius: var(--radius-lg);
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms ease;
   }
 
   .input-field {
@@ -134,6 +142,37 @@
 
   .spin {
     animation: spin 0.9s linear infinite;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .surface-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 26px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    .glass-panel:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 46px rgba(15, 23, 42, 0.11);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .surface-card,
+    .glass-panel {
+      transition: none;
+    }
+
+    .surface-card:hover {
+      transform: none;
+      border-color: rgba(148, 163, 184, 0.22);
+      box-shadow: 0 22px 45px rgba(15, 23, 42, 0.09);
+    }
+
+    .glass-panel:hover {
+      transform: none;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    }
   }
 
   @keyframes spin {

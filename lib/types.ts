@@ -20,6 +20,7 @@ export interface AuthUser {
   email: string;
   role: Role;
   isEmailVerified: boolean;
+  isActive: boolean;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -42,13 +43,24 @@ export interface VerifyEmailResponse {
   user: AuthUser;
 }
 
+export type CategoryScope = "blog" | "store" | "wiki" | "all";
+
 export interface Category {
   _id: string;
   name: string;
   slug: string;
   description?: string;
-  scope: "blog" | "store" | "wiki" | "all";
+  scope: CategoryScope;
+  icon?: string;
+  color?: string;
+  coverImage?: string;
+  parentId?: string;
+  order: number;
   postCount: number;
+  productCount?: number;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Tag {
@@ -57,6 +69,9 @@ export interface Tag {
   slug: string;
   description?: string;
   usageCount: number;
+  isApproved: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PollOption {
@@ -156,6 +171,7 @@ export interface Post {
   reviewedBy?: string;
   reviewedAt?: string;
   rejectionReason?: string;
+  bookmarks?: string[];
   views: number;
   likesCount: number;
   bookmarksCount: number;
@@ -174,6 +190,7 @@ export interface CommentAuthor {
 
 export interface Comment {
   _id: string;
+  id?: string;
   postId: string;
   authorId: string;
   content: string;
@@ -181,6 +198,10 @@ export interface Comment {
   depth: number;
   likesCount: number;
   isEdited: boolean;
+  isDeleted?: boolean;
+  isHidden: boolean;
+  hiddenBy?: string;
+  hideReason?: string;
   createdAt: string;
   updatedAt: string;
   author: CommentAuthor | null;

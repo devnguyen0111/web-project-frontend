@@ -31,7 +31,12 @@ export default function LoginPage() {
       await login({ email, password });
       router.push("/dashboard");
     } catch (err) {
-      if (err instanceof ApiError && err.statusCode === 403) {
+      const isUnverifiedEmailError =
+        err instanceof ApiError &&
+        err.statusCode === 403 &&
+        err.message.toLowerCase().includes("email is not verified");
+
+      if (isUnverifiedEmailError) {
         router.push(`/verify-email?email=${encodeURIComponent(email)}&from=login`);
         return;
       }

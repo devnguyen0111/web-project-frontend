@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api/http";
 import type {
   Category,
+  CategoryScope,
   Comment,
   PaginatedResult,
   Poll,
@@ -16,6 +17,11 @@ interface PostsQuery {
   categoryId?: string;
   tagId?: string;
   status?: string;
+}
+
+interface CommentsQuery {
+  page?: number;
+  limit?: number;
 }
 
 interface CreatePostPayload {
@@ -46,9 +52,45 @@ interface UpdatePostPayload {
   };
 }
 
+interface CreateCategoryPayload {
+  name: string;
+  description?: string;
+  scope?: CategoryScope;
+  parentId?: string;
+  order?: number;
+  color?: string;
+  isActive?: boolean;
+}
+
+interface UpdateCategoryPayload {
+  name?: string;
+  description?: string;
+  scope?: CategoryScope;
+  parentId?: string;
+  order?: number;
+  color?: string;
+  isActive?: boolean;
+}
+
+interface CreateTagPayload {
+  name: string;
+  description?: string;
+  isApproved?: boolean;
+}
+
+interface UpdateTagPayload {
+  name?: string;
+  description?: string;
+  isApproved?: boolean;
+}
+
 interface PostLikeStatus {
   liked: boolean;
   likesCount: number;
+}
+
+interface PostBookmarkStatus {
+  bookmarked: boolean;
 }
 
 interface UploadedPostImage {
@@ -60,7 +102,7 @@ interface UploadedPostImage {
 
 const inFlightPostBySlugRequests = new Map<string, Promise<Post>>();
 
-function buildQuery(query: PostsQuery) {
+function buildQuery(query: PostsQuery | CommentsQuery) {
   const params = new URLSearchParams();
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== "") {
@@ -199,6 +241,17 @@ export async function getPostLikeStatus(postId: string) {
   return response.data;
 }
 
+export async function togglePostBookmark(postId: string) {
+  const response = await apiRequest<PostBookmarkStatus>(
+    `/posts/${postId}/bookmark`,
+    {
+      method: "POST",
+    },
+  );
+
+  return response.data;
+}
+
 export async function votePoll(postId: string, optionIndex: number) {
   const response = await apiRequest<{ voted: boolean }>(
     `/posts/${postId}/poll/vote`,
@@ -220,9 +273,10 @@ export async function getPollResults(postId: string) {
   return response.data;
 }
 
-export async function listComments(postId: string, page = 1, limit = 20) {
+export async function listComments(postId: string, query: CommentsQuery = {}) {
+  const { page = 1, limit = 20 } = query;
   const response = await apiRequest<PaginatedResult<Comment>>(
-    `/posts/${postId}/comments?page=${page}&limit=${limit}`,
+    `/posts/${postId}/comments${buildQuery({ page, limit })}`,
     {
       method: "GET",
       skipAuth: true,
@@ -254,10 +308,84 @@ export async function listCategories() {
   return response.data;
 }
 
+export async function listAllCategoriesAdmin() {
+  const response = await apiRequest<Category[]>("/categories/admin/all", {
+    method: "GET",
+  });
+
+  return response.data;
+}
+
+export async function createCategory(payload: CreateCategoryPayload) {
+  const response = await apiRequest<Category>("/categories", {
+    method: "POST",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+export async function updateCategory(
+  categoryId: string,
+  payload: UpdateCategoryPayload,
+) {
+  const response = await apiRequest<Category>(`/categories/${categoryId}`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+export async function deleteCategory(categoryId: string) {
+  const response = await apiRequest<{ message: string }>(
+    `/categories/${categoryId}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  return response.data;
+}
+
 export async function listTags() {
   const response = await apiRequest<Tag[]>("/tags", {
     method: "GET",
     skipAuth: true,
+  });
+
+  return response.data;
+}
+
+export async function listAllTagsAdmin() {
+  const response = await apiRequest<Tag[]>("/tags/admin/all", {
+    method: "GET",
+  });
+
+  return response.data;
+}
+
+export async function createTag(payload: CreateTagPayload) {
+  const response = await apiRequest<Tag>("/tags", {
+    method: "POST",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+export async function updateTag(tagId: string, payload: UpdateTagPayload) {
+  const response = await apiRequest<Tag>(`/tags/${tagId}`, {
+    method: "PATCH",
+    body: payload,
+  });
+
+  return response.data;
+}
+
+export async function deleteTag(tagId: string) {
+  const response = await apiRequest<{ message: string }>(`/tags/${tagId}`, {
+    method: "DELETE",
   });
 
   return response.data;
@@ -270,6 +398,32 @@ export async function listPendingPosts(page = 1, limit = 10) {
       method: "GET",
     },
   );
+
+  return response.data;
+}
+
+export async function updateComment(commentId: string, content: string) {
+  const response = await apiRequest<Comment>(`/comments/${commentId}`, {
+    method: "PATCH",
+    body: { content },
+  });
+
+  return response.data;
+}
+
+export async function deleteComment(commentId: string) {
+  const response = await apiRequest<{ message: string }>(`/comments/${commentId}`, {
+    method: "DELETE",
+  });
+
+  return response.data;
+}
+
+export async function hideComment(commentId: string, reason?: string) {
+  const response = await apiRequest<Comment>(`/comments/${commentId}/hide`, {
+    method: "PATCH",
+    body: { reason },
+  });
 
   return response.data;
 }

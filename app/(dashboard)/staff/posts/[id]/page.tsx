@@ -25,7 +25,7 @@ function formatDateTime(value?: string) {
   return timestamp.toLocaleString();
 }
 
-export default function AdminPendingPostDetailPage() {
+export default function StaffPendingPostDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const postId = useMemo(() => params?.id ?? "", [params]);
