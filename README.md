@@ -1,6 +1,6 @@
 # Web Project Frontend
 
-Next.js App Router frontend for auth, public blog, author dashboard, staff moderation, and admin management. The app uses React 19, TypeScript, Tailwind CSS 4, shadcn/ui-style primitives, and Framer Motion.
+Next.js App Router frontend for the public site, authentication, blog, wallet, subscription, staff moderation, and admin workflows. The app uses React 19, TypeScript, Tailwind CSS 4, shadcn/ui-style primitives, Base UI, and Framer Motion.
 
 ## Quick Start
 
@@ -36,6 +36,8 @@ If your backend runs elsewhere, update `.env.local` before starting the frontend
 - `/` - landing page with links to blog and dashboard.
 - `/blog` - published post list with search, category filter, tag filter, and pagination.
 - `/blog/[slug]` - post detail with block rendering, likes, bookmarks, comments, replies, edit/delete/hide comment actions, and poll voting.
+- `/subscription` - public subscription page with pricing, billing cycle toggle, wallet-aware CTA, and purchase flow.
+- `/subscriptions` - legacy route redirected to `/subscription`.
 
 ### Auth
 
@@ -58,6 +60,12 @@ Auth flow in the UI:
 - `/dashboard/posts/new` - create a post, upload cover/block images, add category/tags, and submit for moderation.
 - `/dashboard/posts/[id]/edit` - edit an existing post and send it back to moderation if needed.
 - `/dashboard/profile` - update full name and upload avatar.
+- `/dashboard/wallet` - wallet balance, transaction history, deposit requests, and PayOS top-up flow.
+- `/dashboard/subscription` - legacy route redirected to `/settings/subscription`.
+
+### Settings
+
+- `/settings/subscription` - current plan summary, active quota/perk state, wallet-aware renew/upgrade actions, auto-renew controls, history, and notification feed.
 
 ### Staff
 
@@ -71,6 +79,46 @@ Auth flow in the UI:
 - `/admin/users` - user management, role changes, enable/disable, and profile edits.
 - `/admin/taxonomy` - category and tag CRUD.
 - `/admin/posts/[id]` - pending post detail view for moderation.
+- `/admin/wallet` - manual wallet adjustment tools.
+
+## Subscription UX
+
+The subscription flow is split into two routes:
+
+- `/subscription` is the public marketing and pricing page.
+- `/settings/subscription` is the authenticated management page.
+
+The public page includes:
+
+- hero section and value proposition
+- billing cycle toggle for monthly, quarterly, and yearly
+- plan cards for `free`, `pro`, and `vip`
+- wallet-aware purchase CTA
+- purchase confirmation modal
+- FAQ and perk comparison content
+
+The management page includes:
+
+- current plan summary
+- active quota and perk state
+- wallet-aware renew / upgrade form
+- auto-renew toggle
+- cancel-at-period-end toggle
+- subscription history derived from wallet subscription transactions
+- subscription notification feed with mark-read actions
+
+Current frontend enforcement is quota-first:
+
+- monthly post quota is enforced in the UI and reflected in the dashboard
+- non-quota perks are displayed with explicit `Coming soon` labels
+- the UI does not claim active enforcement for perks that are still informational only
+
+Wallet behavior:
+
+- subscription purchases are paid with wallet coins
+- guest users are redirected to login for upgrade actions
+- users with insufficient balance see a top-up CTA
+- wallet top-up uses the existing PayOS flow in `/dashboard/wallet`
 
 ## Role Access
 
@@ -78,26 +126,26 @@ The navigation and guards follow the role helpers in `lib/rbac.ts`:
 
 - `author`, `staff`, `admin` can access `/dashboard`.
 - `staff`, `admin` can access moderation and taxonomy screens.
-- `admin` can access `/admin` and `/admin/users`.
+- `admin` can access `/admin`, `/admin/users`, `/admin/taxonomy`, `/admin/posts/[id]`, and `/admin/wallet`.
 
 ## Project Structure
 
-- `app/` - route groups for auth, public pages, dashboard, staff, and admin.
+- `app/` - route groups for auth, public pages, dashboard, settings, staff, and admin.
 - `components/common` - shared layout pieces such as the site header and pagination.
 - `components/blog` - blog-specific editor, renderer, comments, and post UI.
 - `components/motion` - shared Framer Motion wrappers and route transitions.
 - `components/ui` - reusable UI primitives.
-- `lib/api` - backend API clients for auth, users, and blog.
-- `lib/rbac.ts` - role checks and nav link selection.
+- `lib/api` - backend API clients for auth, users, blog, wallet, subscriptions, and notifications.
+- `lib/types.ts` - shared frontend types for auth, wallet, subscription, and notification data.
+- `lib/rbac.ts` - role checks and navbar link selection.
 - `providers/` - auth and motion providers wired in `app/layout.tsx`.
 
 ## Verification Status
 
-Checked on `2026-03-18`:
+Checked on `2026-03-19`:
 
-- `pnpm lint` passed.
 - `pnpm test` passed.
-- `pnpm build` passed.
+- `pnpm exec tsc --noEmit` passed.
 
 ## Troubleshooting
 
