@@ -14,7 +14,10 @@ export function canAccessModeration(role?: Role | null): boolean {
 }
 
 export function getNavbarLinks(role?: Role | null): NavLink[] {
-  const links: NavLink[] = [{ href: "/blog", label: "Blog" }];
+  const links: NavLink[] = [
+    { href: "/blog", label: "Blog" },
+    { href: "/subscription", label: "Subscription" },
+  ];
 
   if (canAccessDashboard(role)) {
     links.push({ href: "/dashboard", label: "Dashboard" });

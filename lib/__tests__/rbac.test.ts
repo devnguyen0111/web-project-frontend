@@ -21,18 +21,24 @@ describe("rbac helpers", () => {
   });
 
   it("builds navbar links by role", () => {
-    expect(getNavbarLinks("guest").map((item) => item.href)).toEqual(["/blog"]);
+    expect(getNavbarLinks("guest").map((item) => item.href)).toEqual([
+      "/blog",
+      "/subscription",
+    ]);
     expect(getNavbarLinks("author").map((item) => item.href)).toEqual([
       "/blog",
+      "/subscription",
       "/dashboard",
     ]);
     expect(getNavbarLinks("staff").map((item) => item.href)).toEqual([
       "/blog",
+      "/subscription",
       "/dashboard",
       "/staff",
     ]);
     expect(getNavbarLinks("admin").map((item) => item.href)).toEqual([
       "/blog",
+      "/subscription",
       "/dashboard",
       "/admin",
     ]);

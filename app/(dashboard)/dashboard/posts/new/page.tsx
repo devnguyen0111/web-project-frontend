@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { PostBlockEditor } from "@/components/blog/PostBlockEditor";
 import { PostBlockRenderer } from "@/components/blog/PostBlockRenderer";
@@ -25,8 +26,9 @@ import {
   uploadPostBlockImage,
   uploadPostCoverImage,
 } from "@/lib/api/blog";
+import { getMyProfile } from "@/lib/api/users";
 import { createEmptyPostBlock, normalizePostBlocksForSubmit } from "@/lib/post-blocks";
-import type { Category, PostBlock, Tag } from "@/lib/types";
+import type { AuthUser, Category, PostBlock, Tag, UserPostQuota } from "@/lib/types";
 
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
@@ -52,12 +54,26 @@ export default function NewPostPage() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [profile, setProfile] = useState<AuthUser | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
 
   const previewBlocks = useMemo(() => normalizePostBlocksForSubmit(blocks), [blocks]);
+
+  async function refreshQuota() {
+    setQuotaLoading(true);
+    try {
+      const profileData = await getMyProfile();
+      setProfile(profileData);
+    } catch {
+      setProfile(null);
+    } finally {
+      setQuotaLoading(false);
+    }
+  }
 
   useEffect(() => {
     Promise.all([listCategories(), listTags()])
@@ -69,6 +85,8 @@ export default function NewPostPage() {
         setCategories([]);
         setTags([]);
       });
+
+    void refreshQuota();
   }, []);
 
   useEffect(() => {
@@ -150,8 +168,16 @@ export default function NewPostPage() {
     });
   }
 
+  const postQuota: UserPostQuota | null = profile?.postQuota ?? null;
+  const exhaustedQuota = Boolean(postQuota?.exhausted);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (exhaustedQuota) {
+      setError("Monthly post quota reached. Please renew or upgrade your subscription.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     setResult("");
@@ -257,8 +283,19 @@ export default function NewPostPage() {
       setPollQuestion("");
       setPollOptions(["", ""]);
       setPollEndsAt("");
+      await refreshQuota();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create post failed");
+      const message = err instanceof Error ? err.message : "Create post failed";
+      const normalizedMessage = message.toLowerCase();
+      if (
+        normalizedMessage.includes("quota") ||
+        normalizedMessage.includes("monthly post")
+      ) {
+        setError("You have reached your monthly post limit. Upgrade subscription to continue.");
+        await refreshQuota();
+      } else {
+        setError(message);
+      }
     } finally {
       setSaving(false);
     }
@@ -286,6 +323,42 @@ export default function NewPostPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Subscription: {profile?.subscription.planName ?? "Free"}
+                  </p>
+                  <p className="text-xs text-amber-800">
+                    Monthly quota
+                    {quotaLoading ? " - loading..." : ""}
+                  </p>
+                </div>
+                <Link
+                  href="/settings/subscription"
+                  className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                >
+                  Manage subscription
+                </Link>
+              </div>
+              <div className="mt-3 grid gap-2 text-xs text-slate-700 sm:grid-cols-3">
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  Allowed: {postQuota?.allowedPosts ?? 0}
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  Used: {postQuota?.usedPosts ?? 0}
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  Remaining: {postQuota?.remainingPosts ?? 0}
+                </div>
+              </div>
+              {exhaustedQuota ? (
+                <p className="mt-2 text-sm font-semibold text-rose-700">
+                  You have reached your monthly post quota.
+                </p>
+              ) : null}
+            </div>
+
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5 md:col-span-2">
@@ -485,8 +558,8 @@ export default function NewPostPage() {
               {error ? <p className="text-sm text-rose-600">{error}</p> : null}
               {result ? <p className="text-sm text-emerald-700">{result}</p> : null}
 
-              <Button type="submit" disabled={saving}>
-                {saving ? "Submitting..." : "Create and submit"}
+              <Button type="submit" disabled={saving || exhaustedQuota}>
+                {saving ? "Submitting..." : exhaustedQuota ? "Quota exhausted" : "Create and submit"}
               </Button>
             </form>
           </CardContent>

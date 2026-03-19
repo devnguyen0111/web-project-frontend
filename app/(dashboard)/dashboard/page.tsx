@@ -120,6 +120,18 @@ export default function DashboardPage() {
               >
                 Update profile
               </Link>
+              <Link
+                href="/dashboard/wallet"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Wallet & payments
+              </Link>
+              <Link
+                href="/settings/subscription"
+                className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+              >
+                Subscription & quota
+              </Link>
             </CardContent>
           </Card>
         </MotionDiv>
@@ -216,18 +228,93 @@ export default function DashboardPage() {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.3, delay: 0.06, ease: smoothEase }}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile snapshot</CardTitle>
-                <CardDescription>Data from /users/me</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-slate-700">
-                <p className="font-semibold text-slate-900">{profile?.fullName || "-"}</p>
-                <Separator />
-                <p>{profile?.email || "-"}</p>
-                <Badge className="w-fit">{profile?.role || "guest"}</Badge>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card className="border-slate-200 bg-white">
+                <CardHeader>
+                  <CardTitle>Profile snapshot</CardTitle>
+                  <CardDescription>Data from /users/me</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm text-slate-700">
+                  <p className="font-semibold text-slate-900">{profile?.fullName || "-"}</p>
+                  <Separator />
+                  <p>{profile?.email || "-"}</p>
+                  <Badge className="w-fit">{profile?.role || "guest"}</Badge>
+                </CardContent>
+              </Card>
+
+              <Card className="overflow-hidden border-amber-200 bg-[linear-gradient(160deg,rgba(255,251,235,0.95),rgba(255,255,255,1))]">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <CardTitle>Subscription snapshot</CardTitle>
+                      <CardDescription>
+                        Current plan, monthly post quota, and renewal window
+                      </CardDescription>
+                    </div>
+                    <Badge className="w-fit bg-amber-500 text-white hover:bg-amber-500">
+                      {profile?.subscription.planName ?? "Free"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-amber-200 bg-white/80 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Allowed</p>
+                      <p className="mt-1 text-2xl font-semibold text-slate-950">
+                        {profile?.postQuota.allowedPosts ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Used</p>
+                      <p className="mt-1 text-2xl font-semibold text-slate-950">
+                        {profile?.postQuota.usedPosts ?? 0}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-emerald-700">Remaining</p>
+                      <p className="mt-1 text-2xl font-semibold text-emerald-900">
+                        {profile?.postQuota.remainingPosts ?? 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-700">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        Billing:{" "}
+                        <span className="font-semibold text-slate-950">
+                          {profile?.subscription.currentPeriodStart
+                            ? new Date(profile?.subscription.currentPeriodStart).toLocaleDateString()
+                            : "-"}
+                        </span>
+                        {" "}to{" "}
+                        <span className="font-semibold text-slate-950">
+                          {profile?.subscription.currentPeriodEnd
+                            ? new Date(profile?.subscription.currentPeriodEnd).toLocaleDateString()
+                            : "-"}
+                        </span>
+                      </span>
+                      <span
+                        className={
+                          profile?.postQuota.exhausted
+                            ? "font-semibold text-rose-600"
+                            : "font-semibold text-emerald-700"
+                        }
+                      >
+                        {profile?.postQuota.exhausted ? "Quota exhausted" : "Quota available"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/settings/subscription"
+                    className="inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    Manage subscription
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           </MotionDiv>
         </div>
       </MotionSection>

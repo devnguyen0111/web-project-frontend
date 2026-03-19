@@ -56,6 +56,23 @@ export default function AdminControlCenterPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-lg">Wallet adjustments</CardTitle>
+              <CardDescription>
+                Manually credit or debit a user wallet and keep an audit trail for support actions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/admin/wallet"
+                className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Open wallet tools
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-lg">Taxonomy governance</CardTitle>
               <CardDescription>
                 Category and tag lifecycle with staff/admin collaboration.
