@@ -1,6 +1,15 @@
 import { apiRequest } from "@/lib/api/http";
 import type { NotificationItem, PaginatedResult } from "@/lib/types";
 
+function normalizeNotification(item: NotificationItem): NotificationItem {
+  const normalizedId = item.id ?? item._id ?? "";
+  return {
+    ...item,
+    id: normalizedId,
+    _id: item._id ?? normalizedId,
+  };
+}
+
 export async function listMyNotifications(query: { page?: number; limit?: number } = {}) {
   const searchParams = new URLSearchParams();
   if (query.page) {
@@ -18,7 +27,10 @@ export async function listMyNotifications(query: { page?: number; limit?: number
     },
   );
 
-  return response.data;
+  return {
+    ...response.data,
+    data: response.data.data.map(normalizeNotification),
+  };
 }
 
 export async function getMyNotificationUnreadCount() {
@@ -40,7 +52,7 @@ export async function markNotificationRead(notificationId: string) {
     },
   );
 
-  return response.data;
+  return normalizeNotification(response.data);
 }
 
 export async function markAllNotificationsRead() {

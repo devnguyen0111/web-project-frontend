@@ -69,6 +69,10 @@ function buildIdempotencyKey(planCode: string, billingCycle: BillingCycle) {
   return `subscription:settings:${planCode}:${billingCycle}:${suffix}`;
 }
 
+function resolveItemId(item: { id?: string; _id?: string }) {
+  return item.id || item._id || "";
+}
+
 export default function SubscriptionSettingsPage() {
   const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -459,8 +463,10 @@ export default function SubscriptionSettingsPage() {
                     {notifications.length === 0 ? (
                       <p className="text-sm text-slate-500">No notifications yet.</p>
                     ) : (
-                      notifications.map((item) => (
-                        <div key={item._id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                      notifications.map((item) => {
+                        const itemId = resolveItemId(item);
+                        return (
+                        <div key={itemId} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="font-semibold text-slate-900">{item.title}</p>
@@ -468,7 +474,12 @@ export default function SubscriptionSettingsPage() {
                               <p className="mt-1 text-xs text-slate-500">{formatDate(item.createdAt)}</p>
                             </div>
                             {!item.readAt ? (
-                              <Button variant="outline" onClick={() => handleMarkRead(item._id)} className="text-xs">
+                              <Button
+                                variant="outline"
+                                onClick={() => handleMarkRead(itemId)}
+                                className="text-xs"
+                                disabled={!itemId}
+                              >
                                 Mark read
                               </Button>
                             ) : (
@@ -476,7 +487,7 @@ export default function SubscriptionSettingsPage() {
                             )}
                           </div>
                         </div>
-                      ))
+                      )})
                     )}
                   </div>
                 </CardContent>
@@ -494,7 +505,7 @@ export default function SubscriptionSettingsPage() {
                     <p className="text-sm text-slate-500">No subscription transaction yet.</p>
                   ) : (
                     history.map((item) => (
-                      <div key={item._id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+                      <div key={resolveItemId(item)} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
                         <p className="font-semibold text-slate-900">
                           {String(item.planCode ?? "unknown").toUpperCase()} - {String(item.billingCycle ?? "monthly")}
                         </p>

@@ -7,6 +7,15 @@ import type {
   SubscriptionPlan,
 } from "@/lib/types";
 
+function normalizeHistoryItem(item: SubscriptionHistoryItem): SubscriptionHistoryItem {
+  const normalizedId = item.id ?? item._id ?? "";
+  return {
+    ...item,
+    id: normalizedId,
+    _id: item._id ?? normalizedId,
+  };
+}
+
 export async function listSubscriptionPlans() {
   const response = await apiRequest<SubscriptionPlan[]>("/subscriptions/plans", {
     method: "GET",
@@ -76,5 +85,8 @@ export async function listMySubscriptionHistory(query: { page?: number; limit?: 
     },
   );
 
-  return response.data;
+  return {
+    ...response.data,
+    data: response.data.data.map(normalizeHistoryItem),
+  };
 }
