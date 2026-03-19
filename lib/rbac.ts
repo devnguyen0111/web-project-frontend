@@ -17,6 +17,9 @@ export function getNavbarLinks(role?: Role | null): NavLink[] {
   const links: NavLink[] = [
     { href: "/blog", label: "Blog" },
     { href: "/subscription", label: "Subscription" },
+    { href: "/store", label: "Store" },
+    { href: "/cart", label: "Cart" },
+    { href: "/orders/me", label: "Orders" },
   ];
 
   if (canAccessDashboard(role)) {

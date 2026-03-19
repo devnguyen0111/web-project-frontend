@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -564,9 +564,59 @@ export function WalletDashboardSection() {
   const initialLoading = summaryLoading && transactionsLoading;
 
   return (
-    <main className="pb-14 pt-10">
+    <main className="overflow-x-clip pb-16">
+      <section className="page-bleed border-b border-cyan-200/70 bg-[linear-gradient(135deg,#f9fdff_0%,#e6f6ff_52%,#fff6d4_100%)] text-slate-900">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.16),transparent_24%)]" />
+        <MotionSection
+          className="page-hero-shell grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: smoothEase }}
+        >
+          <MotionDiv
+            className="space-y-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.04, ease: smoothEase }}
+          >
+            <Badge className="w-fit border border-cyan-200/80 bg-white/80 text-slate-800">Wallet</Badge>
+            <div className="space-y-4">
+              <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                Wallet balance, deposit flow, and transaction history in one full-width shell
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                Create deposit requests, scan the payment QR, and review the ledger in centered cards that
+                stay readable on desktop and mobile.
+              </p>
+            </div>
+          </MotionDiv>
+
+          <MotionDiv
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.42, delay: 0.08, ease: smoothEase }}
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Balance</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{formatCoins(summary?.balance)}</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Available</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{formatCoins(availableBalance)}</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Transactions</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{pageInfo.total}</p>
+              </div>
+            </div>
+          </MotionDiv>
+        </MotionSection>
+      </section>
+
+      <section className="content-shell page-stack py-10">
       <MotionSection
-        className="section-shell space-y-6"
+        className="page-stack"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
@@ -775,7 +825,7 @@ export function WalletDashboardSection() {
                     <span className="font-medium text-slate-900">
                       {qrHeadline}
                     </span>
-                    {" · "}
+                    {" � "}
                     {qrDescription}
                   </CardDescription>
                 </CardHeader>
@@ -970,6 +1020,7 @@ export function WalletDashboardSection() {
           </Card>
         </MotionDiv>
       </MotionSection>
+      </section>
     </main>
   );
 }

@@ -355,19 +355,115 @@ export default function BlogDetailPage() {
   }
 
   return (
-    <main className="pb-14 pt-10">
+    <main className="pb-16 pt-0">
       <MotionSection
-        className="section-shell space-y-6"
+        className="relative isolate overflow-hidden bg-gradient-to-br from-cyan-100 via-sky-100 to-amber-100 text-slate-900"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.34, ease: smoothEase }}
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="absolute right-0 top-12 h-80 w-80 rounded-full bg-amber-300/10 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-cyan-200/40 to-transparent" />
+        </div>
+
+        <div className="section-shell relative py-14 lg:px-16 lg:py-20 xl:px-20">
+          <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-white/8 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+            <MotionDiv
+              className="space-y-5"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.34, delay: 0.04, ease: smoothEase }}
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-white/85 text-slate-800">{post.status}</Badge>
+                <Badge className="bg-white/80 text-slate-700">Blog post</Badge>
+              </div>
+              <div className="space-y-4">
+                <h1 className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+                  {post.title}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                  By {post.author?.fullName ?? post.authorId} - {post.views} views -{" "}
+                  {post.likesCount} likes - {commentsTotal} comments
+                </p>
+                <p className="max-w-2xl text-sm leading-7 text-slate-700/90">
+                  The article content stays constrained below; this full-bleed introduction
+                  gives the page a clear editorial headline without widening the reading
+                  measure.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="#comments"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                >
+                  Jump to comments
+                </a>
+                <a
+                  href="#article-content"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-cyan-200/80 bg-white/85 px-5 text-sm font-semibold text-slate-800 transition hover:bg-cyan-50"
+                >
+                  Read article
+                </a>
+              </div>
+            </MotionDiv>
+
+            <MotionDiv
+              className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/72"
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.36, delay: 0.08, ease: smoothEase }}
+            >
+              <div className="relative aspect-[4/3] w-full bg-slate-900">
+                {post.coverImageUrl ? (
+                  <Image
+                    src={post.coverImageUrl}
+                    alt={post.title}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 40vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
+                    Editorial feature
+                  </div>
+                )}
+              </div>
+              <div className="grid gap-3 border-t border-white/10 p-5 sm:grid-cols-3">
+                {[
+                  { label: "Comments", value: String(commentsTotal) },
+                  { label: "Likes", value: String(post.likesCount) },
+                  { label: "Views", value: String(post.views) },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/8 p-3">
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </MotionDiv>
+          </div>
+        </div>
+      </MotionSection>
+
+      <MotionSection
+        className="section-shell mt-8 space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
       >
         <MotionDiv
+          id="article-content"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.32, delay: 0.04, ease: smoothEase }}
         >
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
             {post.coverImageUrl ? (
               <div className="relative h-72 w-full">
                 <Image
@@ -418,7 +514,7 @@ export default function BlogDetailPage() {
               <PostBlockRenderer blocks={post.blocks ?? []} />
             </CardContent>
           </Card>
-        </MotionDiv>
+          </MotionDiv>
 
         {poll ? (
           <MotionDiv
@@ -469,6 +565,7 @@ export default function BlogDetailPage() {
         ) : null}
 
         <MotionDiv
+          id="comments"
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}

@@ -302,9 +302,73 @@ export default function NewPostPage() {
   }
 
   return (
-    <main className="pb-14 pt-10">
+    <main className="overflow-x-clip pb-16">
+      <section className="page-bleed border-b border-cyan-200/70 bg-[linear-gradient(135deg,#f9fdff_0%,#e6f6ff_52%,#fff6d4_100%)] text-slate-900">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.18),transparent_24%)]" />
+        <MotionSection
+          className="page-hero-shell grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: smoothEase }}
+        >
+          <MotionDiv
+            className="space-y-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.04, ease: smoothEase }}
+          >
+            <Badge className="w-fit border border-cyan-200/80 bg-white/80 text-slate-800">Author studio</Badge>
+            <div className="space-y-4">
+              <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                Create a post inside the same full-bleed workspace used across the dashboard
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                Compose content with the block editor, upload an optional cover image, and submit for
+                moderation without leaving a constrained, readable form area.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm">
+              <Link
+                href="/dashboard"
+                className="rounded-full border border-cyan-200/80 bg-white/80 px-4 py-2 font-semibold text-slate-800 transition hover:bg-cyan-100/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              >
+                Back to dashboard
+              </Link>
+              <Link
+                href="/settings/subscription"
+                className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 font-semibold text-cyan-800 transition hover:bg-cyan-300/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              >
+                Manage subscription
+              </Link>
+            </div>
+          </MotionDiv>
+
+          <MotionDiv
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.42, delay: 0.08, ease: smoothEase }}
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Plan</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{profile?.subscription.planName ?? "Free"}</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Allowed</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{postQuota?.allowedPosts ?? 0}</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Remaining</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{postQuota?.remainingPosts ?? 0}</p>
+              </div>
+            </div>
+          </MotionDiv>
+        </MotionSection>
+      </section>
+
+      <section className="content-shell page-stack py-10">
       <MotionSection
-        className="section-shell"
+        className="page-stack"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
@@ -566,6 +630,7 @@ export default function NewPostPage() {
         </Card>
         </MotionDiv>
       </MotionSection>
+      </section>
     </main>
   );
 }

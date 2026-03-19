@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -191,59 +191,74 @@ export default function SubscriptionMarketingPage() {
   }
 
   return (
-    <main className="pb-16 pt-10">
+    <main className="pb-16 pt-0">
       <MotionSection
-        className="section-shell space-y-6"
+        className="relative isolate overflow-hidden bg-gradient-to-br from-cyan-100 via-sky-100 to-amber-100 text-slate-900"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
       >
-        <Card className="overflow-hidden border-cyan-200 bg-gradient-to-br from-cyan-500 via-blue-500 to-teal-500 text-white">
-          <CardContent className="grid gap-8 p-8 md:grid-cols-[1.25fr_0.75fr]">
-            <div className="space-y-4">
-              <Badge className="w-fit bg-white/20 text-white">Subscription</Badge>
-              <h1 className="text-3xl font-semibold leading-tight md:text-5xl">
-                Upgrade your account to unlock more benefits
-              </h1>
-              <p className="max-w-2xl text-sm text-white/90 md:text-base">
-                Earn bonus coin rewards, get store discounts, receive support priority, and enjoy a better ecosystem experience.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button
-                  className="bg-white text-slate-900 hover:bg-slate-100"
-                  onClick={() => {
-                    const target = document.getElementById("plan-section");
-                    target?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                >
-                  View suitable plans
-                </Button>
-                <Link href={user ? "/settings/subscription" : "/login"}>
-                  <Button variant="outline" className="border-white/70 bg-transparent text-white hover:bg-white/10">
-                    {user ? "Manage current plan" : "Log in to upgrade"}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-cyan-300/20 blur-3xl" />
+          <div className="absolute right-0 top-8 h-80 w-80 rounded-full bg-amber-300/10 blur-3xl" />
+        </div>
+
+        <div className="section-shell relative py-14 lg:px-16 lg:py-20 xl:px-20">
+          <Card className="overflow-hidden border-white/10 bg-white/80 text-slate-800 shadow-2xl shadow-slate-950/20 backdrop-blur">
+            <CardContent className="grid gap-8 p-8 md:grid-cols-[1.25fr_0.75fr]">
+              <div className="space-y-4">
+                <Badge className="w-fit bg-white/90 text-slate-800">Subscription</Badge>
+                <h1 className="text-3xl font-semibold leading-tight md:text-5xl">
+                  Upgrade your account to unlock more benefits
+                </h1>
+                <p className="max-w-2xl text-sm text-slate-700 md:text-base">
+                  Earn bonus coin rewards, get store discounts, receive support priority, and
+                  enjoy a better ecosystem experience.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    className="bg-white text-slate-900 hover:bg-slate-100"
+                    onClick={() => {
+                      const target = document.getElementById("plan-section");
+                      target?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    View suitable plans
                   </Button>
-                </Link>
+                  <Link href={user ? "/settings/subscription" : "/login"}>
+                    <Button
+                      variant="outline"
+                      className="border-white/70 bg-transparent text-slate-800 hover:bg-cyan-50"
+                    >
+                      {user ? "Manage current plan" : "Log in to upgrade"}
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-3 rounded-2xl border border-white/30 bg-white/15 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-[0.14em] text-white/90">Quick value</p>
-              <div className="rounded-xl bg-white/85 p-3 text-slate-900">
-                <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Blog reward</p>
-                <p className="mt-1 text-sm font-semibold">+10% to +25% bonus (Coming soon)</p>
+              <div className="space-y-3 rounded-2xl border border-cyan-200/80 bg-white/85 p-5">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-700">Quick value</p>
+                <div className="rounded-xl bg-white/90 p-3 text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Blog reward</p>
+                  <p className="mt-1 text-sm font-semibold">+10% to +25% bonus (Coming soon)</p>
+                </div>
+                <div className="rounded-xl bg-white/90 p-3 text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Store discount</p>
+                  <p className="mt-1 text-sm font-semibold">-5% to -10% (Coming soon)</p>
+                </div>
+                <div className="rounded-xl bg-white/90 p-3 text-slate-900">
+                  <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Current wallet</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {user ? `${formatCoins(walletBalanceCoins)} coin` : "Login required"}
+                  </p>
+                </div>
               </div>
-              <div className="rounded-xl bg-white/85 p-3 text-slate-900">
-                <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Store discount</p>
-                <p className="mt-1 text-sm font-semibold">-5% to -10% (Coming soon)</p>
-              </div>
-              <div className="rounded-xl bg-white/85 p-3 text-slate-900">
-                <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Current wallet</p>
-                <p className="mt-1 text-sm font-semibold">{user ? `${formatCoins(walletBalanceCoins)} coin` : "Login required"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </MotionSection>
 
+      <div className="section-shell mt-8 space-y-6">
         {error ? (
           <Card className="border-rose-200 bg-rose-50">
             <CardContent className="p-4 text-sm text-rose-700">{error}</CardContent>
@@ -261,7 +276,8 @@ export default function SubscriptionMarketingPage() {
             <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-amber-900">
               <div>
                 <p className="font-semibold">
-                  Current plan: {overview.subscription.planName} ({overview.subscription.billingCycle})
+                  Current plan: {overview.subscription.planName} (
+                  {overview.subscription.billingCycle})
                 </p>
                 <p>
                   Expires:{" "}
@@ -277,7 +293,7 @@ export default function SubscriptionMarketingPage() {
           </Card>
         ) : null}
 
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
           <CardHeader>
             <CardTitle>Billing cycle</CardTitle>
             <CardDescription>Switch cycle to see dynamic coin pricing and savings</CardDescription>
@@ -289,12 +305,16 @@ export default function SubscriptionMarketingPage() {
                 type="button"
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${
                   billingCycle === cycle
-                    ? "bg-slate-950 text-white"
+                    ? "bg-cyan-600 text-white"
                     : "border border-slate-300 bg-white text-slate-700"
                 }`}
                 onClick={() => setBillingCycle(cycle)}
               >
-                {cycle === "monthly" ? "Month" : cycle === "quarterly" ? "Quarter (-10%)" : "Year (-20%)"}
+                {cycle === "monthly"
+                  ? "Month"
+                  : cycle === "quarterly"
+                    ? "Quarter (-10%)"
+                    : "Year (-20%)"}
               </button>
             ))}
           </CardContent>
@@ -320,22 +340,36 @@ export default function SubscriptionMarketingPage() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.3, delay: index * 0.05, ease: smoothEase }}
               >
-                <Card className={plan.code === "vip" ? "border-cyan-300 shadow-[0_14px_40px_rgba(8,145,178,0.14)]" : "border-slate-200"}>
+                <Card
+                  className={
+                    plan.code === "vip"
+                      ? "border-cyan-300 shadow-[0_14px_40px_rgba(8,145,178,0.14)]"
+                      : "border-slate-200"
+                  }
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <CardTitle>{plan.name}</CardTitle>
                         <CardDescription>{plan.monthlyPostLimit} posts/month quota</CardDescription>
                       </div>
-                      {plan.code === "vip" ? <Badge className="bg-cyan-600 text-white">Best value</Badge> : null}
+                      {plan.code === "vip" ? (
+                        <Badge className="bg-cyan-600 text-white">Best value</Badge>
+                      ) : null}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4 text-sm">
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                       <p className="text-xs uppercase tracking-[0.1em] text-slate-500">Price</p>
-                      <p className="mt-1 text-2xl font-semibold text-slate-950">{formatCoins(cyclePrice)} coin</p>
+                      <p className="mt-1 text-2xl font-semibold text-slate-950">
+                        {formatCoins(cyclePrice)} coin
+                      </p>
                       <p className="text-xs text-slate-500">
-                        {billingCycle === "monthly" ? "Monthly billing" : billingCycle === "quarterly" ? "Quarterly billing" : "Yearly billing"}
+                        {billingCycle === "monthly"
+                          ? "Monthly billing"
+                          : billingCycle === "quarterly"
+                            ? "Quarterly billing"
+                            : "Yearly billing"}
                       </p>
                     </div>
 
@@ -347,7 +381,10 @@ export default function SubscriptionMarketingPage() {
                             ? `${value}${row.suffix ? ` ${row.suffix}` : ""}`
                             : String(value);
                         return (
-                          <div key={`${plan.code}-${row.key}`} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                          <div
+                            key={`${plan.code}-${row.key}`}
+                            className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                          >
                             <span className="text-slate-600">{row.label}</span>
                             <span className="font-semibold text-slate-900">{display}</span>
                           </div>
@@ -362,7 +399,11 @@ export default function SubscriptionMarketingPage() {
                     {user ? (
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
                         <p>Wallet: {formatCoins(walletBalanceCoins)} coin</p>
-                        <p>{lackingCoins > 0 ? `Need +${formatCoins(lackingCoins)} coin` : "Enough balance for this plan"}</p>
+                        <p>
+                          {lackingCoins > 0
+                            ? `Need +${formatCoins(lackingCoins)} coin`
+                            : "Enough balance for this plan"}
+                        </p>
                       </div>
                     ) : null}
 
@@ -413,13 +454,13 @@ export default function SubscriptionMarketingPage() {
             "Support: ticket priority and better SLA (Coming soon)",
             "Profile: badge + featured profile boost (Coming soon)",
           ].map((item) => (
-            <Card key={item}>
+            <Card key={item} className="border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
               <CardContent className="p-4 text-sm text-slate-700">{item}</CardContent>
             </Card>
           ))}
         </section>
 
-        <Card>
+        <Card className="border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
           <CardHeader>
             <CardTitle>FAQ</CardTitle>
             <CardDescription>Common subscription and wallet questions</CardDescription>
@@ -427,18 +468,29 @@ export default function SubscriptionMarketingPage() {
           <CardContent className="space-y-3 text-sm text-slate-700">
             {[
               ["How is a subscription paid?", "Subscriptions are purchased using wallet coins."],
-              ["What if I do not have enough coins?", "Top up coins via PayOS on the Wallet page, then return to purchase a plan."],
-              ["If I disable auto-renew, do I lose perks immediately?", "No. Your plan remains active until the current billing cycle ends."],
-              ["Is subscription history available?", "Yes. You can view it in Settings > Subscription."],
+              [
+                "What if I do not have enough coins?",
+                "Top up coins via PayOS on the Wallet page, then return to purchase a plan.",
+              ],
+              [
+                "If I disable auto-renew, do I lose perks immediately?",
+                "No. Your plan remains active until the current billing cycle ends.",
+              ],
+              [
+                "Is subscription history available?",
+                "Yes. You can view it in Settings > Subscription.",
+              ],
             ].map(([question, answer]) => (
               <details key={question} className="rounded-lg border border-slate-200 bg-white p-3">
-                <summary className="cursor-pointer font-semibold text-slate-900">{question}</summary>
+                <summary className="cursor-pointer font-semibold text-slate-900">
+                  {question}
+                </summary>
                 <p className="mt-2">{answer}</p>
               </details>
             ))}
           </CardContent>
         </Card>
-      </MotionSection>
+      </div>
 
       {purchaseState ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">

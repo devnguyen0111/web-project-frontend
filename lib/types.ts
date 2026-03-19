@@ -295,6 +295,349 @@ export interface AdminWalletAdjustResponse {
   balance?: number;
 }
 
+export type StoreProductType = "digital" | "custom_order";
+export type StoreProductStatus =
+  | "draft"
+  | "pending_review"
+  | "active"
+  | "paused"
+  | "rejected"
+  | "archived";
+
+export type StoreCustomFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "select"
+  | "checkbox"
+  | "file";
+
+export type StoreOrderStatus =
+  | "pending"
+  | "paid"
+  | "quoted"
+  | "quote_accepted"
+  | "processing"
+  | "delivered"
+  | "completed"
+  | "cancelled"
+  | "refund_requested"
+  | "refunded"
+  | "disputed";
+
+export interface StoreProductImage {
+  url: string;
+  alt?: string;
+  order?: number;
+}
+
+export interface StoreProductFile {
+  filename: string;
+  storagePath: string;
+  size: number;
+  mimeType?: string;
+  version?: number;
+  uploadedAt: string;
+}
+
+export interface StoreProductCustomField {
+  _id?: string;
+  label: string;
+  type: StoreCustomFieldType;
+  options?: string[];
+  required?: boolean;
+  placeholder?: string;
+}
+
+export interface StoreProductEstimatedDays {
+  min: number;
+  max: number;
+}
+
+export interface StoreProductSubscriberDiscount {
+  pro: number;
+  vip: number;
+}
+
+export interface StoreProduct {
+  id?: string;
+  _id: string;
+  sellerId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  shortDescription?: string;
+  images: StoreProductImage[];
+  previewUrl?: string;
+  type: StoreProductType;
+  files: StoreProductFile[];
+  customFields?: StoreProductCustomField[];
+  estimatedDays?: StoreProductEstimatedDays;
+  price: number;
+  originalPrice?: number;
+  isOnSale?: boolean;
+  saleEndsAt?: string;
+  categoryId?: string;
+  tags?: string[];
+  salesCount?: number;
+  rating?: number;
+  reviewsCount?: number;
+  viewsCount?: number;
+  favoritesCount?: number;
+  status: StoreProductStatus;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  stock?: number;
+  maxPerUser?: number;
+  isFeatured?: boolean;
+  subscriberDiscount?: StoreProductSubscriberDiscount;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StoreOrderProductSnapshot {
+  name: string;
+  type: StoreProductType;
+  price: number;
+  image?: string;
+  slug?: string;
+  originalPrice?: number;
+  shortDescription?: string;
+}
+
+export interface StoreOrderItem {
+  productId: string;
+  productSnapshot: StoreOrderProductSnapshot;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  subtotal: number;
+  customData?: Record<string, unknown>;
+}
+
+export interface StoreOrderQuote {
+  price: number;
+  estimatedDays?: number;
+  note?: string;
+  quotedAt?: string;
+  acceptedAt?: string;
+}
+
+export interface StoreOrderDeliveryFile {
+  filename: string;
+  storagePath: string;
+  size: number;
+  mimeType?: string;
+  uploadedAt: string;
+}
+
+export interface StoreOrderStatusHistoryEntry {
+  from?: StoreOrderStatus;
+  to: StoreOrderStatus;
+  note?: string;
+  changedBy?: string;
+  changedAt: string;
+}
+
+export interface StoreOrderRefund {
+  reason?: string;
+  requestedAt?: string;
+  processedBy?: string;
+  processedAt?: string;
+  amount?: number;
+}
+
+export interface StoreOrder {
+  id?: string;
+  _id: string;
+  orderNumber: string;
+  buyerId: string;
+  sellerId: string;
+  items: StoreOrderItem[];
+  subtotal: number;
+  platformFee: number;
+  totalAmount: number;
+  sellerReceives: number;
+  buyerTransactionId?: string;
+  sellerTransactionId?: string;
+  status: StoreOrderStatus;
+  quote?: StoreOrderQuote;
+  deliveryFiles?: StoreOrderDeliveryFile[];
+  deliveredAt?: string;
+  completedAt?: string;
+  autoCompleteAt?: string;
+  statusHistory?: StoreOrderStatusHistoryEntry[];
+  buyerNote?: string;
+  managerNote?: string;
+  adminNote?: string;
+  cancelReason?: string;
+  refund?: StoreOrderRefund;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrderPayload {
+  productId: string;
+  quantity?: number;
+  customData?: Record<string, unknown>;
+  buyerNote?: string;
+}
+
+export interface CancelOrderPayload {
+  reason?: string;
+}
+
+export interface RejectQuotePayload {
+  reason?: string;
+}
+
+export interface StoreProductsQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  type?: StoreProductType | string;
+  categoryId?: string;
+  status?: StoreProductStatus | string;
+}
+
+export interface StoreOrdersQuery {
+  page?: number;
+  limit?: number;
+  status?: StoreOrderStatus | string;
+}
+
+export interface StoreCartProductSnapshot {
+  name: string;
+  slug?: string;
+  type?: StoreProductType;
+  price?: number;
+  originalPrice?: number;
+  image?: string;
+  shortDescription?: string;
+}
+
+export interface StoreCartItem {
+  id?: string;
+  _id?: string;
+  productId: string;
+  product?: StoreProduct | null;
+  productSnapshot?: StoreCartProductSnapshot | StoreOrderProductSnapshot;
+  productName?: string;
+  productSlug?: string;
+  productType?: StoreProductType;
+  productImage?: string;
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  lineTotal?: number;
+  available?: boolean;
+  selected?: boolean;
+  customData?: Record<string, unknown>;
+  buyerNote?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface StoreCartSummary {
+  itemCount: number;
+  selectedCount: number;
+  subtotal: number;
+  selectedSubtotal?: number;
+  currency?: string;
+}
+
+export interface StoreCart {
+  id?: string;
+  _id?: string;
+  userId?: string;
+  items: StoreCartItem[];
+  summary?: StoreCartSummary;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AddCartItemPayload {
+  productId: string;
+  quantity?: number;
+  customData?: Record<string, unknown>;
+  buyerNote?: string;
+}
+
+export interface UpdateCartItemPayload {
+  quantity?: number;
+  selected?: boolean;
+  customData?: Record<string, unknown>;
+  buyerNote?: string;
+}
+
+export interface CheckoutCartPayload {
+  itemIds?: string[];
+  selectedItemIds?: string[];
+  buyerNote?: string;
+  idempotencyKey?: string;
+}
+
+export interface StoreCartCheckoutItemResult {
+  itemId?: string;
+  productId: string;
+  productName?: string;
+  productSlug?: string;
+  quantity: number;
+  status: "success" | "failed";
+  message?: string;
+  reason?: string;
+  orderId?: string;
+  orderNumber?: string;
+  subtotal?: number;
+  totalAmount?: number;
+}
+
+export interface StoreCartCheckoutResult {
+  message?: string;
+  cart?: StoreCart;
+  order?: StoreOrder;
+  orders?: StoreOrder[];
+  createdOrders?: StoreOrder[];
+  successItems?: StoreCartCheckoutItemResult[];
+  failedItems?: StoreCartCheckoutItemResult[];
+  backendFailedItems?: StoreCartCheckoutFailedItem[];
+  summary?: StoreCartCheckoutSummary;
+  selectedCount?: number;
+  subtotal?: number;
+  totalAmount?: number;
+  currency?: string;
+  checkoutUrl?: string;
+}
+
+export interface StoreCartCheckoutFailedItem {
+  itemId: string;
+  productId?: string;
+  quantity: number;
+  reason: string;
+}
+
+export interface StoreCartCheckoutSummary {
+  itemCount: number;
+  selectedCount: number;
+  subtotal: number;
+  successCount: number;
+  failedCount: number;
+}
+
+export interface StoreCartCheckoutBackendResponse {
+  createdOrders: StoreOrder[];
+  failedItems: StoreCartCheckoutFailedItem[];
+  summary: StoreCartCheckoutSummary;
+}
+
+export interface OrderDownloadLinkResponse {
+  url?: string;
+  downloadUrl?: string;
+  signedUrl?: string;
+  expiresAt?: string;
+  file?: StoreOrderDeliveryFile;
+}
+
 export type NotificationCategory = "subscription";
 export type NotificationType =
   | "subscription_reminder"

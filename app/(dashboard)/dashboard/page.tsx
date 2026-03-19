@@ -87,48 +87,119 @@ export default function DashboardPage() {
   const isInitialLoading = profileLoading && postsLoading;
 
   return (
-    <main className="pb-14 pt-10">
-      <MotionSection
-        className="section-shell space-y-6"
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
-      >
-        <MotionDiv
-          initial={{ opacity: 0, y: 12 }}
+    <main className="overflow-x-clip pb-16">
+      <section className="page-bleed border-b border-cyan-200/70 bg-[linear-gradient(135deg,#f9fdff_0%,#e6f6ff_52%,#fff6d4_100%)] text-slate-900">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.16),transparent_24%)]" />
+        <MotionSection
+          className="page-hero-shell grid gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-center"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.04, ease: smoothEase }}
+          transition={{ duration: 0.4, ease: smoothEase }}
         >
-          <Card>
-            <CardHeader>
-              <Badge className="w-fit">Dashboard</Badge>
-              <CardTitle>Content workspace</CardTitle>
-              <CardDescription>
-                Review your posts, update profile details, and create new drafts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
+          <MotionDiv
+            className="space-y-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.04, ease: smoothEase }}
+          >
+            <Badge className="w-fit border border-cyan-200/80 bg-white/80 text-slate-800">Dashboard</Badge>
+            <div className="space-y-4">
+              <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                Content workspace with a full-width command strip and constrained working panels
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                Review posts, update profile details, and check quota or billing state from a single dashboard
+                shell that keeps the core tools centered and readable.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm">
               <Link
                 href="/dashboard/posts/new"
-                className="rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-white hover:bg-cyan-400"
+                className="rounded-full border border-cyan-200/80 bg-white/80 px-4 py-2 font-semibold text-slate-800 transition hover:bg-cyan-100/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 Create new post
               </Link>
               <Link
                 href="/dashboard/profile"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-cyan-200/80 bg-white/80 px-4 py-2 font-semibold text-slate-800 transition hover:bg-cyan-100/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 Update profile
               </Link>
               <Link
                 href="/dashboard/wallet"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 font-semibold text-cyan-800 transition hover:bg-cyan-300/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 Wallet & payments
               </Link>
               <Link
                 href="/settings/subscription"
-                className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+                className="rounded-full border border-amber-300/35 bg-amber-300/10 px-4 py-2 font-semibold text-amber-50 transition hover:bg-amber-300/15 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-200/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              >
+                Subscription & quota
+              </Link>
+            </div>
+          </MotionDiv>
+
+          <MotionDiv
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.42, delay: 0.08, ease: smoothEase }}
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Role</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{profile?.role || "Loading..."}</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Plan</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">
+                  {profile?.subscription.planName || "Loading..."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Posts</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{pageInfo.total || posts.length || 0}</p>
+              </div>
+            </div>
+          </MotionDiv>
+        </MotionSection>
+      </section>
+
+      <section className="content-shell page-stack py-10">
+        <MotionDiv
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.04, ease: smoothEase }}
+        >
+          <Card className="surface-card">
+            <CardHeader>
+              <CardTitle>Workspace shortcuts</CardTitle>
+              <CardDescription>
+                Common actions for content creation, account management, and billing.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Link
+                href="/dashboard/posts/new"
+                className="rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-400"
+              >
+                Create new post
+              </Link>
+              <Link
+                href="/dashboard/profile"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Update profile
+              </Link>
+              <Link
+                href="/dashboard/wallet"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Wallet & payments
+              </Link>
+              <Link
+                href="/settings/subscription"
+                className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
               >
                 Subscription & quota
               </Link>
@@ -161,7 +232,7 @@ export default function DashboardPage() {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.3, ease: smoothEase }}
           >
-            <Card>
+            <Card className="surface-card">
               <CardHeader>
                 <CardTitle>My posts</CardTitle>
                 <CardDescription>
@@ -229,7 +300,7 @@ export default function DashboardPage() {
             transition={{ duration: 0.3, delay: 0.06, ease: smoothEase }}
           >
             <div className="space-y-6">
-              <Card className="border-slate-200 bg-white">
+              <Card className="surface-card border-slate-200 bg-white">
                 <CardHeader>
                   <CardTitle>Profile snapshot</CardTitle>
                   <CardDescription>Data from /users/me</CardDescription>
@@ -242,7 +313,7 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="overflow-hidden border-amber-200 bg-[linear-gradient(160deg,rgba(255,251,235,0.95),rgba(255,255,255,1))]">
+              <Card className="surface-card overflow-hidden border-amber-200 bg-[linear-gradient(160deg,rgba(255,251,235,0.95),rgba(255,255,255,1))]">
                 <CardHeader>
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -308,7 +379,7 @@ export default function DashboardPage() {
 
                   <Link
                     href="/settings/subscription"
-                    className="inline-flex rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    className="inline-flex rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500"
                   >
                     Manage subscription
                   </Link>
@@ -317,7 +388,7 @@ export default function DashboardPage() {
             </div>
           </MotionDiv>
         </div>
-      </MotionSection>
+      </section>
     </main>
   );
 }

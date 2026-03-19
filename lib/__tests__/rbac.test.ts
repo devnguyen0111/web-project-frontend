@@ -24,21 +24,33 @@ describe("rbac helpers", () => {
     expect(getNavbarLinks("guest").map((item) => item.href)).toEqual([
       "/blog",
       "/subscription",
+      "/store",
+      "/cart",
+      "/orders/me",
     ]);
     expect(getNavbarLinks("author").map((item) => item.href)).toEqual([
       "/blog",
       "/subscription",
+      "/store",
+      "/cart",
+      "/orders/me",
       "/dashboard",
     ]);
     expect(getNavbarLinks("staff").map((item) => item.href)).toEqual([
       "/blog",
       "/subscription",
+      "/store",
+      "/cart",
+      "/orders/me",
       "/dashboard",
       "/staff",
     ]);
     expect(getNavbarLinks("admin").map((item) => item.href)).toEqual([
       "/blog",
       "/subscription",
+      "/store",
+      "/cart",
+      "/orders/me",
       "/dashboard",
       "/admin",
     ]);

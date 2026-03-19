@@ -7,7 +7,19 @@ import { Suspense } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { PaginationControls } from "@/components/common/pagination-controls";
 import { MotionDiv, MotionSection } from "@/components/motion";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select, Spinner } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Select,
+  Spinner,
+} from "@/components/ui";
 import { listCategories, listPublishedPosts, listTags } from "@/lib/api/blog";
 import { getPostPreviewText } from "@/lib/post-blocks";
 import type { Category, Post, Tag } from "@/lib/types";
@@ -134,9 +146,78 @@ function BlogListPageContent() {
   }
 
   return (
-    <main className="pb-14 pt-10">
+    <main className="pb-16 pt-0">
       <MotionSection
-        className="section-shell space-y-6"
+        className="relative isolate overflow-hidden bg-gradient-to-br from-cyan-100 via-sky-100 to-amber-100 text-slate-900"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.34, ease: smoothEase }}
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-amber-300/10 blur-3xl" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-cyan-200/40 to-transparent" />
+        </div>
+
+        <div className="section-shell relative py-14 lg:px-16 lg:py-20 xl:px-20">
+          <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-white/8 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+            <MotionDiv
+              className="space-y-5"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.38, delay: 0.04, ease: smoothEase }}
+            >
+              <Badge className="w-fit bg-white/85 text-slate-800">Blog</Badge>
+              <div className="space-y-4">
+                <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+                  Browse articles with the right amount of contrast, depth, and breathing room.
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                  The list view keeps the hero immersive and the article cards constrained, so
+                  filters, pagination, and previews stay readable on both mobile and desktop.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="#blog-filters"
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                >
+                  Filter posts
+                </Link>
+                <Link
+                  href="#blog-grid"
+                  className="inline-flex h-11 items-center justify-center rounded-xl border border-cyan-200/80 bg-white/85 px-5 text-sm font-semibold text-slate-800 transition hover:bg-cyan-50"
+                >
+                  Jump to results
+                </Link>
+              </div>
+            </MotionDiv>
+
+            <MotionDiv
+              className="grid gap-3 rounded-[1.75rem] border border-white/10 bg-white/72 p-5"
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.08, ease: smoothEase }}
+            >
+              {[
+                { label: "Page size", value: `${PAGE_SIZE} posts per page` },
+                { label: "Content", value: "Articles, polls, comments, and previews" },
+                { label: "Filters", value: "Search, category, and tag" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+                  <p className="text-xs uppercase tracking-[0.1em] text-slate-500">{item.label}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{item.value}</p>
+                </div>
+              ))}
+            </MotionDiv>
+          </div>
+        </div>
+      </MotionSection>
+
+      <MotionSection
+        id="blog-filters"
+        className="section-shell mt-8 space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
@@ -146,7 +227,7 @@ function BlogListPageContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.04, ease: smoothEase }}
         >
-          <Card>
+          <Card className="border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
             <CardHeader>
               <CardTitle>Published blog posts</CardTitle>
               <CardDescription>
@@ -183,7 +264,11 @@ function BlogListPageContent() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="tag">Tag</Label>
-                  <Select id="tag" value={tagId} onChange={(event) => setTagId(event.target.value)}>
+                  <Select
+                    id="tag"
+                    value={tagId}
+                    onChange={(event) => setTagId(event.target.value)}
+                  >
                     <option value="">All tags</option>
                     {tags.map((item) => (
                       <option key={item._id} value={item._id}>
@@ -237,7 +322,7 @@ function BlogListPageContent() {
           </Card>
         ) : null}
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div id="blog-grid" className="grid gap-5 md:grid-cols-2">
           {posts.map((post, index) => (
             <MotionDiv
               key={post._id}
@@ -246,7 +331,7 @@ function BlogListPageContent() {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.3, delay: index * 0.06, ease: smoothEase }}
             >
-              <Card className="flex h-full flex-col overflow-hidden">
+              <Card className="flex h-full flex-col overflow-hidden border-slate-200/80 bg-white/95 shadow-sm shadow-slate-950/5">
                 <div className="relative h-52 w-full bg-slate-100">
                   {post.coverImageUrl ? (
                     <Image
@@ -293,7 +378,7 @@ export default function BlogListPage() {
   return (
     <Suspense
       fallback={
-        <main className="pb-14 pt-10">
+        <main className="pb-16 pt-10">
           <section className="section-shell">
             <div className="flex justify-center py-8">
               <Spinner label="Loading posts" />
@@ -306,3 +391,4 @@ export default function BlogListPage() {
     </Suspense>
   );
 }
+

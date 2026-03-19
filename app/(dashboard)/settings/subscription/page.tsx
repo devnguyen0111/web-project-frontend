@@ -231,9 +231,73 @@ export default function SubscriptionSettingsPage() {
   }
 
   return (
-    <main className="pb-16 pt-10">
-      <MotionSection
-        className="section-shell space-y-6"
+    <main className="overflow-x-clip pb-16">
+      <section className="page-bleed border-b border-cyan-200/70 bg-[linear-gradient(135deg,#f9fdff_0%,#e6f6ff_52%,#fff6d4_100%)] text-slate-900">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.18),transparent_24%)]" />
+        <MotionSection
+          className="page-hero-shell grid gap-8 lg:grid-cols-[1.06fr_0.94fr] lg:items-center"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: smoothEase }}
+        >
+          <MotionDiv
+            className="space-y-6"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.04, ease: smoothEase }}
+          >
+            <Badge className="mb-1 w-fit border border-cyan-200/80 bg-white/80 text-slate-800">
+              Settings
+            </Badge>
+            <div className="space-y-4">
+              <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                Subscription management in a full-bleed shell, with actions kept centered and legible
+              </h1>
+              <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                Review plan state, wallet-aware renewals, notifications, and billing history without losing
+                the separation between navigation chrome and functional content.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm">
+              <Link href="/subscription">
+                <Button className="bg-white text-slate-950 hover:bg-slate-100">View plans</Button>
+              </Link>
+              <Link href="/dashboard/wallet">
+                <Button variant="outline" className="border-cyan-200/80 bg-white/85 text-slate-800 hover:bg-cyan-100/70">
+                  Wallet
+                </Button>
+              </Link>
+            </div>
+          </MotionDiv>
+
+          <MotionDiv
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.42, delay: 0.08, ease: smoothEase }}
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Plan</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">
+                  {overview?.subscription.planName ?? "Loading..."}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Wallet</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{formatCoins(walletBalanceCoins)} coin</p>
+              </div>
+              <div className="rounded-2xl border border-cyan-200/80 bg-white/80 px-4 py-4 shadow-[0_16px_40px_rgba(2,6,23,0.12)] backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700">Unread</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{unreadCount}</p>
+              </div>
+            </div>
+          </MotionDiv>
+        </MotionSection>
+      </section>
+
+      <section className="content-shell page-stack py-10">
+        <MotionSection
+        className="page-stack"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.34, ease: smoothEase }}
@@ -242,7 +306,7 @@ export default function SubscriptionSettingsPage() {
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <Badge className="mb-3 w-fit bg-slate-950 text-white hover:bg-slate-950">
+                <Badge className="mb-3 w-fit bg-cyan-600 text-white hover:bg-cyan-500">
                   Settings
                 </Badge>
                 <CardTitle>Subscription management</CardTitle>
@@ -407,7 +471,7 @@ export default function SubscriptionSettingsPage() {
                             type="button"
                             className={`rounded-full px-4 py-2 text-sm font-semibold ${
                               selectedCycle === cycle
-                                ? "bg-slate-950 text-white"
+                                ? "bg-cyan-600 text-white"
                                 : "border border-slate-300 bg-white text-slate-700"
                             }`}
                             onClick={() => setSelectedCycle(cycle)}
@@ -523,6 +587,7 @@ export default function SubscriptionSettingsPage() {
           </>
         ) : null}
       </MotionSection>
+      </section>
     </main>
   );
 }

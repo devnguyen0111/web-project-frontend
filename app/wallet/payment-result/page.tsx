@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -10,6 +10,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Suspense, type ComponentType, useEffect, useMemo, useState } from "react";
+import { MotionSection } from "@/components/motion";
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { getPayosReturnStatus, syncPayosReturnStatus } from "@/lib/api/wallet";
 import type { PayosReturnStatus, PayosReturnStatusQuery, PayosReturnStatusResponse } from "@/lib/types";
@@ -390,7 +391,73 @@ function PayosReturnContent() {
   const coinAmount = transaction?.coinAmount ?? walletTopup?.coinAmount;
 
   return (
-    <main className="pb-16 pt-10">
+    <main className="pb-16 pt-0">
+      <MotionSection
+        className="relative isolate overflow-hidden bg-gradient-to-br from-cyan-100 via-sky-100 to-amber-100 text-slate-900"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl" />
+          <div className="absolute right-0 top-12 h-80 w-80 rounded-full bg-amber-300/10 blur-3xl" />
+        </div>
+
+        <div className="section-shell relative py-14 lg:px-16 lg:py-20 xl:px-20">
+          <Card className="overflow-hidden border-white/10 bg-white/80 text-slate-800 shadow-2xl shadow-slate-950/20 backdrop-blur">
+            <CardContent className="grid gap-6 p-8 md:grid-cols-[1.25fr_0.75fr] md:p-10">
+              <div className="space-y-4">
+                <Badge className={`w-fit rounded-full px-3 py-1 ${statusBadgeTone(uiStatus)}`}>
+                  {statusText}
+                </Badge>
+                <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
+                  {meta.title}
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-700 md:text-base">
+                  {result?.message || meta.description}
+                </p>
+                <p className="text-sm text-slate-500">
+                  Display unit: coin (1 coin = 1,000 VND).
+                  {polling ? " Auto-checking payment state every 3 seconds." : ""}
+                </p>
+                {!loading && lastUpdatedAt ? (
+                  <p className="text-xs text-slate-500">
+                    Last checked: {formatDateTime(lastUpdatedAt)}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/10 p-5">
+                <div className="rounded-xl border border-white/10 bg-white/78 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-700">
+                    Order code
+                  </p>
+                  <p className="mt-1 break-all text-sm font-semibold text-slate-900">
+                    {orderCodeDisplay}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/78 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-700">
+                    Payment link
+                  </p>
+                  <p className="mt-1 break-all text-sm font-semibold text-slate-900">
+                    {paymentLinkIdDisplay}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/78 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-700">
+                    Amount
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
+                    {formatCoins(coinAmount)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MotionSection>
+
       <section className="section-shell">
         <Card className={`border ${meta.panelTone}`}>
           <CardContent className="p-8">
@@ -575,7 +642,7 @@ function PayosReturnContent() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/dashboard/wallet"
-                className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-400"
+                className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-400"
               >
                 {primaryActionLabel}
               </Link>
@@ -629,4 +696,5 @@ export default function PayosReturnPage() {
     </Suspense>
   );
 }
+
 
