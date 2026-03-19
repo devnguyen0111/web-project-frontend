@@ -24,10 +24,12 @@ If your backend runs elsewhere, update `.env.local` before starting the frontend
 - `pnpm dev` - start the Next.js dev server with Webpack.
 - `pnpm dev:turbo` - start the dev server with Turbopack.
 - `pnpm build` - create a production build.
+- `pnpm build:release` - clean `.next` then build (release-safe path to avoid stale/locked build artifacts).
 - `pnpm start` - run the production server after `pnpm build`.
 - `pnpm lint` - run ESLint.
 - `pnpm test` - run Vitest once.
 - `pnpm test:watch` - run Vitest in watch mode.
+- `pnpm run validate:env` - validate required build-time environment variables.
 
 ## App Map
 

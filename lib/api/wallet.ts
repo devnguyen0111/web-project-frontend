@@ -1,4 +1,4 @@
-import { apiRequest, getApiBaseUrl } from "@/lib/api/http";
+import { apiRequest } from "@/lib/api/http";
 import type {
   AdminWalletAdjustPayload,
   AdminWalletAdjustResponse,
@@ -124,43 +124,21 @@ function buildPublicQuery(params: Record<string, string | undefined>) {
   return queryString ? `?${queryString}` : "";
 }
 
-async function parsePublicPayload<T>(response: Response): Promise<T> {
-  const text = await response.text();
-  let parsed: unknown = undefined;
-
-  if (text) {
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      parsed = undefined;
-    }
-  }
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch PayOS return status");
-  }
-
-  if (
-    parsed &&
-    typeof parsed === "object" &&
-    "data" in parsed &&
-    (parsed as { data?: unknown }).data !== undefined
-  ) {
-    return (parsed as { data: T }).data;
-  }
-
-  return parsed as T;
-}
-
 export async function syncPayosReturnStatus(payload: PayosReturnStatusQuery) {
-  const response = await fetch(`${getApiBaseUrl()}/payment/payos/return-sync`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    cache: "no-store",
-    body: JSON.stringify(payload),
-  });
+  const { signature, ...body } = payload;
+  const response = await apiRequest<Record<string, unknown>>(
+    "/payment/payos/return-sync",
+    {
+      method: "POST",
+      body,
+      headers: signature
+        ? { "x-payment-signature": signature }
+        : undefined,
+      cache: "no-store",
+    },
+  );
 
-  return parsePublicPayload<Record<string, unknown>>(response);
+  return response.data;
 }
 
 export async function getPayosReturnStatus(query: PayosReturnStatusQuery) {
@@ -176,14 +154,16 @@ export async function getPayosReturnStatus(query: PayosReturnStatusQuery) {
           ? String(query.cancel)
           : query.cancel,
     code: query.code,
+    signature: query.signature,
   });
-  const response = await fetch(
-    `${getApiBaseUrl()}/payment/payos/return-status${queryString}`,
+
+  const response = await apiRequest<PayosReturnStatusResponse>(
+    `/payment/payos/return-status${queryString}`,
     {
       method: "GET",
       cache: "no-store",
     },
   );
 
-  return parsePublicPayload<PayosReturnStatusResponse>(response);
+  return response.data;
 }

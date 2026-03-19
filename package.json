@@ -6,6 +6,8 @@
     "dev": "next dev --webpack",
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
+    "build:release": "node ./scripts/build-release.mjs",
+    "validate:env": "node ./scripts/validate-env.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

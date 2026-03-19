@@ -224,6 +224,21 @@ function nextSteps(status: PayosReturnStatus) {
   ];
 }
 
+function resetReturnState(input: {
+  inferredStatus: PayosReturnStatus;
+  setResult: (value: PayosReturnStatusResponse | null) => void;
+  setError: (value: string) => void;
+  setLoading: (value: boolean) => void;
+  setPolling: (value: boolean) => void;
+  setUiStatus: (value: PayosReturnStatus) => void;
+}) {
+  input.setResult(null);
+  input.setError("");
+  input.setLoading(true);
+  input.setPolling(false);
+  input.setUiStatus(input.inferredStatus);
+}
+
 function PayosReturnContent() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<PayosReturnStatusResponse | null>(null);
@@ -240,9 +255,9 @@ function PayosReturnContent() {
     const statusHint = (searchParams.get("status") ?? "").trim().toUpperCase();
     const cancelRaw = searchParams.get("cancel") ?? "";
     const codeHint = (searchParams.get("code") ?? "").trim().toUpperCase();
+    const signature = searchParams.get("signature")?.trim() ?? "";
     const cancelHint = parseBooleanFlag(cancelRaw) || CANCEL_STATUS_SET.has(statusHint);
     const inferredStatus = inferStatusFromHints({ statusHint, codeHint, cancelHint });
-    const signature = [orderCode, paymentLinkId, statusHint, cancelRaw, codeHint].join("|");
 
     return {
       orderCode,
@@ -262,11 +277,14 @@ function PayosReturnContent() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const startedAt = Date.now();
 
-    setResult(null);
-    setError("");
-    setLoading(true);
-    setPolling(false);
-    setUiStatus(queryContext.inferredStatus);
+    resetReturnState({
+      inferredStatus: queryContext.inferredStatus,
+      setResult,
+      setError,
+      setLoading,
+      setPolling,
+      setUiStatus,
+    });
 
     const requestPayload: PayosReturnStatusQuery = {
       orderCode: queryContext.orderCode || undefined,
@@ -275,6 +293,7 @@ function PayosReturnContent() {
       status: queryContext.statusHint || undefined,
       cancel: queryContext.cancelRaw || undefined,
       code: queryContext.codeHint || undefined,
+      signature: queryContext.signature || undefined,
     };
 
     const shouldSyncCancel = Boolean(queryContext.orderCode) && queryContext.cancelHint;
@@ -344,7 +363,17 @@ function PayosReturnContent() {
         clearTimeout(timer);
       }
     };
-  }, [queryContext.signature]);
+  }, [
+    queryContext.orderCode,
+    queryContext.id,
+    queryContext.paymentLinkId,
+    queryContext.statusHint,
+    queryContext.cancelRaw,
+    queryContext.codeHint,
+    queryContext.cancelHint,
+    queryContext.inferredStatus,
+    queryContext.signature,
+  ]);
 
   const meta = STATUS_META[uiStatus];
   const Icon = meta.icon;

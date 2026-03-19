@@ -114,7 +114,7 @@ export interface SubscriptionOverview {
 
 export interface RenewSubscriptionPayload {
   planCode: SubscriptionPlanCode | string;
-  billingCycle?: BillingCycle;
+  billingCycle: BillingCycle;
   months?: number;
   idempotencyKey?: string;
 }
@@ -233,6 +233,7 @@ export interface PayosReturnStatusQuery {
   status?: string;
   cancel?: string | boolean;
   code?: string;
+  signature?: string;
 }
 
 export interface PayosReturnTransactionInfo {
