@@ -1,24 +1,29 @@
 import type { Metadata } from "next";
-import { Newsreader, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/common/site-header";
 import { RouteTransition } from "@/components/motion";
 import { AuthProvider } from "@/providers/auth-provider";
 import { MotionProvider } from "@/providers/motion-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Web Project Frontend",
-  description: "Frontend for auth, users, blog, and moderation modules",
+  title: {
+    default: "Vua Project",
+    template: "%s | Vua Project",
+  },
+  description:
+    "Cosmic-inspired frontend for auth, blog, subscription, wallet, staff moderation, and admin workflows.",
 };
 
 export default function RootLayout({
@@ -27,16 +32,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${spaceGrotesk.variable} ${newsreader.variable} antialiased`}
-      >
-        <AuthProvider>
-          <MotionProvider>
-            <SiteHeader />
-            <RouteTransition>{children}</RouteTransition>
-          </MotionProvider>
-        </AuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${jetBrainsMono.variable} antialiased`}>
+        <ThemeProvider>
+          <AuthProvider>
+            <MotionProvider>
+              <SiteHeader />
+              <RouteTransition>{children}</RouteTransition>
+            </MotionProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

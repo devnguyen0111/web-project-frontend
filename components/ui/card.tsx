@@ -22,7 +22,7 @@ function CardDescription({
   className,
   ...props
 }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("text-sm text-slate-600", className)} {...props} />;
+  return <p className={cn("text-sm text-[color:var(--muted-foreground)]", className)} {...props} />;
 }
 
 function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

@@ -9,6 +9,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function StaffLayout({ children }: { children: ReactNode }) {
   return <DashboardShell>{children}</DashboardShell>;
 }

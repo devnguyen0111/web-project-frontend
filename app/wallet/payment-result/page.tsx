@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -88,6 +88,18 @@ const STATUS_BADGE_LABEL: Record<PayosReturnStatus, string> = {
   cancelled: "CANCELLED",
   verifying: "VERIFYING",
   unknown: "UNKNOWN",
+};
+
+type PayosQueryContext = {
+  orderCode: string;
+  id: string;
+  paymentLinkId: string;
+  statusHint: string;
+  cancelRaw: string;
+  codeHint: string;
+  cancelHint: boolean;
+  inferredStatus: PayosReturnStatus;
+  signature: string;
 };
 
 function parseBooleanFlag(value: string) {
@@ -224,60 +236,40 @@ function nextSteps(status: PayosReturnStatus) {
   ];
 }
 
-function PayosReturnContent() {
-  const searchParams = useSearchParams();
+function PayosReturnContentView({ queryContext }: { queryContext: PayosQueryContext }) {
+  const {
+    orderCode,
+    id,
+    paymentLinkId,
+    statusHint,
+    cancelRaw,
+    codeHint,
+    cancelHint,
+    inferredStatus,
+  } = queryContext;
+
   const [result, setResult] = useState<PayosReturnStatusResponse | null>(null);
-  const [uiStatus, setUiStatus] = useState<PayosReturnStatus>("verifying");
+  const [uiStatus, setUiStatus] = useState<PayosReturnStatus>(inferredStatus);
   const [loading, setLoading] = useState(true);
   const [polling, setPolling] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string>("");
-
-  const queryContext = useMemo(() => {
-    const orderCode = searchParams.get("orderCode")?.trim() ?? "";
-    const id = searchParams.get("id")?.trim() ?? "";
-    const paymentLinkId = searchParams.get("paymentLinkId")?.trim() ?? id;
-    const statusHint = (searchParams.get("status") ?? "").trim().toUpperCase();
-    const cancelRaw = searchParams.get("cancel") ?? "";
-    const codeHint = (searchParams.get("code") ?? "").trim().toUpperCase();
-    const cancelHint = parseBooleanFlag(cancelRaw) || CANCEL_STATUS_SET.has(statusHint);
-    const inferredStatus = inferStatusFromHints({ statusHint, codeHint, cancelHint });
-    const signature = [orderCode, paymentLinkId, statusHint, cancelRaw, codeHint].join("|");
-
-    return {
-      orderCode,
-      id,
-      paymentLinkId,
-      statusHint,
-      cancelRaw,
-      codeHint,
-      cancelHint,
-      inferredStatus,
-      signature,
-    };
-  }, [searchParams]);
 
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const startedAt = Date.now();
 
-    setResult(null);
-    setError("");
-    setLoading(true);
-    setPolling(false);
-    setUiStatus(queryContext.inferredStatus);
-
     const requestPayload: PayosReturnStatusQuery = {
-      orderCode: queryContext.orderCode || undefined,
-      id: queryContext.id || undefined,
-      paymentLinkId: queryContext.paymentLinkId || undefined,
-      status: queryContext.statusHint || undefined,
-      cancel: queryContext.cancelRaw || undefined,
-      code: queryContext.codeHint || undefined,
+      orderCode: orderCode || undefined,
+      id: id || undefined,
+      paymentLinkId: paymentLinkId || undefined,
+      status: statusHint || undefined,
+      cancel: cancelRaw || undefined,
+      code: codeHint || undefined,
     };
 
-    const shouldSyncCancel = Boolean(queryContext.orderCode) && queryContext.cancelHint;
+    const shouldSyncCancel = Boolean(orderCode) && cancelHint;
 
     const pullStatus = async (syncCancel = false) => {
       if (!active) {
@@ -319,7 +311,7 @@ function PayosReturnContent() {
           return;
         }
 
-        const fallbackStatus = queryContext.inferredStatus;
+        const fallbackStatus = inferredStatus;
         setUiStatus(fallbackStatus);
         setLoading(false);
         setError(err instanceof Error ? err.message : "Failed to read payment return status");
@@ -344,7 +336,7 @@ function PayosReturnContent() {
         clearTimeout(timer);
       }
     };
-  }, [queryContext.signature]);
+  }, [cancelHint, cancelRaw, codeHint, id, inferredStatus, orderCode, paymentLinkId, statusHint]);
 
   const meta = STATUS_META[uiStatus];
   const Icon = meta.icon;
@@ -355,9 +347,9 @@ function PayosReturnContent() {
     uiStatus === "success" ? "Go to wallet" : "Open wallet";
   const stepList = nextSteps(uiStatus);
   const orderCodeDisplay =
-    transaction?.orderCode || queryContext.orderCode || "-";
+    transaction?.orderCode || orderCode || "-";
   const paymentLinkIdDisplay =
-    transaction?.paymentLinkId || queryContext.paymentLinkId || "-";
+    transaction?.paymentLinkId || paymentLinkId || "-";
   const coinAmount = transaction?.coinAmount ?? walletTopup?.coinAmount;
 
   return (
@@ -581,6 +573,35 @@ function PayosReturnContent() {
   );
 }
 
+function PayosReturnContent() {
+  const searchParams = useSearchParams();
+  const queryContext = useMemo<PayosQueryContext>(() => {
+    const orderCode = searchParams.get("orderCode")?.trim() ?? "";
+    const id = searchParams.get("id")?.trim() ?? "";
+    const paymentLinkId = searchParams.get("paymentLinkId")?.trim() ?? id;
+    const statusHint = (searchParams.get("status") ?? "").trim().toUpperCase();
+    const cancelRaw = searchParams.get("cancel") ?? "";
+    const codeHint = (searchParams.get("code") ?? "").trim().toUpperCase();
+    const cancelHint = parseBooleanFlag(cancelRaw) || CANCEL_STATUS_SET.has(statusHint);
+    const inferredStatus = inferStatusFromHints({ statusHint, codeHint, cancelHint });
+    const signature = [orderCode, paymentLinkId, statusHint, cancelRaw, codeHint].join("|");
+
+    return {
+      orderCode,
+      id,
+      paymentLinkId,
+      statusHint,
+      cancelRaw,
+      codeHint,
+      cancelHint,
+      inferredStatus,
+      signature,
+    };
+  }, [searchParams]);
+
+  return <PayosReturnContentView key={queryContext.signature} queryContext={queryContext} />;
+}
+
 export default function PayosReturnPage() {
   return (
     <Suspense
@@ -600,4 +621,5 @@ export default function PayosReturnPage() {
     </Suspense>
   );
 }
+
 

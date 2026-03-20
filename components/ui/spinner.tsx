@@ -14,7 +14,7 @@ interface SpinnerProps extends HTMLAttributes<HTMLSpanElement> {
 
 function Spinner({ className, size = "md", label = "Loading", ...props }: SpinnerProps) {
   return (
-    <span className={cn("inline-flex items-center justify-center", className)} {...props}>
+    <span className={cn("inline-flex items-center justify-center text-[color:var(--foreground)]", className)} {...props}>
       <span role="status" aria-label={label} className={cn("spinner spin", sizeMap[size])}>
         <span className="sr-only">{label}</span>
       </span>
