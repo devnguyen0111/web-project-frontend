@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -236,7 +236,7 @@ export default function SubscriptionSettingsPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <Card className="overflow-hidden border-amber-200 bg-[linear-gradient(155deg,rgba(255,251,235,1),rgba(255,255,255,1))]">
           <CardHeader>
@@ -526,3 +526,4 @@ export default function SubscriptionSettingsPage() {
     </main>
   );
 }
+

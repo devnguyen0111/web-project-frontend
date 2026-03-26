@@ -23,6 +23,7 @@ import {
   getMyWalletSummary,
   listMyWalletTransactions,
 } from "@/lib/api/wallet";
+import { createIdempotencyKey } from "@/lib/idempotency";
 import { useWalletSectionMotion } from "./hooks/use-wallet-section-motion";
 import type {
   CreateDepositRequestResponse,
@@ -33,14 +34,26 @@ import type {
 } from "@/lib/types";
 
 const PAGE_SIZE = 10;
-const COIN_TO_VND_RATE = 1000;
+const ACTIVE_DEPOSIT_REQUEST_ID_STORAGE_KEY = "activeDepositRequestId";
 
-function toCoinFromStoredVnd(value?: number) {
+function readStoredActiveDepositRequestId() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.sessionStorage.getItem(ACTIVE_DEPOSIT_REQUEST_ID_STORAGE_KEY);
+}
+
+function toCoinFromStoredVnd(value?: number, coinToVndRate = 1) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return undefined;
   }
 
-  return value / COIN_TO_VND_RATE;
+  if (!coinToVndRate || coinToVndRate <= 0) {
+    return undefined;
+  }
+
+  return value / coinToVndRate;
 }
 
 function formatVnd(value?: number, currency = "VND") {
@@ -55,8 +68,8 @@ function formatVnd(value?: number, currency = "VND") {
   }).format(value);
 }
 
-function formatCoins(value?: number) {
-  const coinValue = toCoinFromStoredVnd(value);
+function formatCoins(value?: number, coinToVndRate?: number) {
+  const coinValue = toCoinFromStoredVnd(value, coinToVndRate);
   if (typeof coinValue !== "number" || Number.isNaN(coinValue)) {
     return "-";
   }
@@ -248,12 +261,12 @@ export function WalletDashboardSection() {
   const [paymentQrSrc, setPaymentQrSrc] = useState("");
   const [activeDepositRequestId, setActiveDepositRequestId] = useState<
     string | null
-  >(null);
+  >(() => readStoredActiveDepositRequestId());
   const [activeDepositStatus, setActiveDepositStatus] = useState<string | null>(
     null,
   );
   const [paymentResultStatus, setPaymentResultStatus] = useState<
-    "completed" | "failed" | null
+    "completed" | "failed" | "cancelled" | null
   >(null);
   const [paymentResultMessage, setPaymentResultMessage] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -286,6 +299,22 @@ export function WalletDashboardSection() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (activeDepositRequestId) {
+      window.sessionStorage.setItem(
+        ACTIVE_DEPOSIT_REQUEST_ID_STORAGE_KEY,
+        activeDepositRequestId,
+      );
+      return;
+    }
+
+    window.sessionStorage.removeItem(ACTIVE_DEPOSIT_REQUEST_ID_STORAGE_KEY);
+  }, [activeDepositRequestId]);
 
   useEffect(() => {
     let active = true;
@@ -364,8 +393,8 @@ export function WalletDashboardSection() {
           return;
         }
 
-        const status = String(latest.status ?? "pending");
-        const normalizedStatus = status.toLowerCase();
+        const status = String(latest.status ?? "pending").toLowerCase();
+        const normalizedStatus = status;
         setActiveDepositStatus(status);
 
         if (normalizedStatus === "completed") {
@@ -374,15 +403,24 @@ export function WalletDashboardSection() {
           setPaymentResultMessage(
             "Payment successful. Coins have been added to your wallet.",
           );
+          setPaymentLink("");
           setActiveDepositRequestId(null);
           setActiveDepositStatus(null);
           await refreshWalletPanels(1);
           return;
         }
 
-        if (normalizedStatus === "failed" || normalizedStatus === "reversed") {
-          setPaymentResultStatus("failed");
-          setPaymentResultMessage("Payment was canceled or failed.");
+        if (
+          normalizedStatus === "failed" ||
+          normalizedStatus === "reversed" ||
+          normalizedStatus === "cancelled" ||
+          normalizedStatus === "canceled"
+        ) {
+          const canceled = normalizedStatus !== "failed";
+          setPaymentResultStatus(canceled ? "cancelled" : "failed");
+          setPaymentResultMessage(
+            canceled ? "Payment was canceled." : "Payment failed.",
+          );
           setPaymentLink("");
           setActiveDepositRequestId(null);
           setActiveDepositStatus(null);
@@ -438,16 +476,23 @@ export function WalletDashboardSection() {
       return;
     }
 
+    const coinToVndRate = summary?.coinToVndRate;
+    if (!coinToVndRate || coinToVndRate <= 0) {
+      setDepositError("Wallet exchange rate is not available yet.");
+      return;
+    }
+
     setDepositLoading(true);
 
     try {
-      const vndAmount = parsedAmount * COIN_TO_VND_RATE;
+      const vndAmount = parsedAmount * coinToVndRate;
       const response = await createDepositRequest({
         amount: vndAmount,
         amountReal: vndAmount,
-        exchangeRate: COIN_TO_VND_RATE,
+        exchangeRate: coinToVndRate,
         currency: "VND",
         provider: "payos",
+        idempotencyKey: createIdempotencyKey("wallet-deposit"),
       });
 
       const url = getPaymentUrl(response);
@@ -497,9 +542,9 @@ export function WalletDashboardSection() {
         activeDepositRequestId,
         "Cancelled from wallet dashboard",
       );
-      setActiveDepositStatus(String(cancelled.status ?? "failed"));
+      setActiveDepositStatus(String(cancelled.status ?? "cancelled").toLowerCase());
       setActiveDepositRequestId(null);
-      setPaymentResultStatus("failed");
+      setPaymentResultStatus("cancelled");
       setPaymentResultMessage("Payment has been canceled.");
       setPaymentLink("");
       await refreshWalletPanels(1);
@@ -519,27 +564,28 @@ export function WalletDashboardSection() {
   const pendingBalance = summary?.pendingBalance ?? summary?.frozenBalance ?? 0;
   const totalDeposited =
     summary?.totalDeposited ?? summary?.lifetimeDeposit ?? 0;
+  const coinToVndRate = summary?.coinToVndRate;
   const showPaymentQr = Boolean(paymentQrSrc);
   const keyStats = [
     {
       label: "Current balance",
-      value: formatCoins(summary?.balance),
+      value: formatCoins(summary?.balance, coinToVndRate),
     },
     {
       label: "Available balance",
-      value: formatCoins(availableBalance),
+      value: formatCoins(availableBalance, coinToVndRate),
     },
     {
       label: "Pending deposits",
-      value: formatCoins(pendingBalance),
+      value: formatCoins(pendingBalance, coinToVndRate),
     },
     {
       label: "Lifetime deposits",
-      value: formatCoins(totalDeposited),
+      value: formatCoins(totalDeposited, coinToVndRate),
     },
     {
       label: "Total spent",
-      value: formatCoins(summary?.totalSpent ?? 0),
+      value: formatCoins(summary?.totalSpent ?? 0, coinToVndRate),
     },
   ];
 
@@ -552,15 +598,19 @@ export function WalletDashboardSection() {
   const qrHeadline =
     paymentResultStatus === "completed"
       ? "Payment confirmed"
-      : paymentResultStatus === "failed"
+      : paymentResultStatus === "cancelled"
         ? "Payment canceled"
-        : "Scan the QR code to complete payment";
+        : paymentResultStatus === "failed"
+          ? "Payment failed"
+          : "Scan the QR code to complete payment";
   const qrDescription =
     paymentResultStatus === "completed"
       ? "Your wallet has been updated. You can continue your purchase now."
-      : paymentResultStatus === "failed"
+      : paymentResultStatus === "cancelled"
         ? "This payment request is no longer active."
-        : "No page refresh needed. Status updates appear here automatically.";
+        : paymentResultStatus === "failed"
+          ? "The payment request failed. Please create a new deposit request."
+          : "No page refresh needed. Status updates appear here automatically.";
   const initialLoading = summaryLoading && transactionsLoading;
 
   return (
@@ -569,7 +619,7 @@ export function WalletDashboardSection() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -653,8 +703,7 @@ export function WalletDashboardSection() {
               <CardHeader className="space-y-2 pb-4">
                 <CardTitle>Request deposit</CardTitle>
                 <CardDescription>
-                  Enter coin amount. PayOS payment value is auto-converted at 1
-                  coin = 1,000 VND.
+                  Enter coin amount. PayOS payment value is converted using the current wallet exchange rate.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -683,10 +732,12 @@ export function WalletDashboardSection() {
                           <p className="text-xs text-slate-500">
                             Payment value:{" "}
                             <span className="font-semibold text-slate-700">
-                              {formatVnd(
-                                Number(amount) * COIN_TO_VND_RATE,
-                                fiatCurrency,
-                              )}
+                              {coinToVndRate
+                                ? formatVnd(
+                                    Number(amount) * coinToVndRate,
+                                    fiatCurrency,
+                                  )
+                                : "-"}
                             </span>
                           </p>
                         ) : null}
@@ -729,7 +780,7 @@ export function WalletDashboardSection() {
                     >
                       Reset
                     </Button>
-                    {paymentLink && paymentResultStatus !== "failed" ? (
+                    {paymentLink && !paymentResultStatus ? (
                       <Button
                         type="button"
                         variant="outline"
@@ -795,9 +846,11 @@ export function WalletDashboardSection() {
                       className={
                         paymentResultStatus === "completed"
                           ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700"
-                          : paymentResultStatus === "failed"
-                            ? "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700"
-                            : "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+                          : paymentResultStatus === "cancelled"
+                            ? "rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700"
+                            : paymentResultStatus === "failed"
+                              ? "rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700"
+                              : "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
                       }
                     >
                       {paymentResultMessage}
@@ -910,7 +963,7 @@ export function WalletDashboardSection() {
                             </td>
                             <td className="px-4 py-3 font-semibold text-slate-900">
                               {signedAmount >= 0 ? "+" : "-"}
-                              {formatCoins(Math.abs(signedAmount))}
+                              {formatCoins(Math.abs(signedAmount), coinToVndRate)}
                             </td>
                             <td className="px-4 py-3">
                               <div className="space-y-1">
@@ -973,5 +1026,6 @@ export function WalletDashboardSection() {
     </main>
   );
 }
+
 
 

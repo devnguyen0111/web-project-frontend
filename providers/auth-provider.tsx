@@ -7,7 +7,7 @@ import {
   register as registerApi,
 } from "@/lib/api/auth";
 import { clearTokens, getAccessToken } from "@/lib/api/token-store";
-import type { AuthUser, RegisterResponse } from "@/lib/types";
+import type { AuthPayload, AuthUser, RegisterResponse } from "@/lib/types";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 interface LoginPayload {
@@ -25,7 +25,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
   initializing: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<AuthPayload>;
   register: (payload: RegisterPayload) => Promise<RegisterResponse>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -78,7 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       const response = await loginApi(payload);
-      setUser(response.user);
+      if (!response.requiresTwoFactor) {
+        setUser(response.user);
+      } else {
+        setUser(null);
+      }
+      return response;
     } finally {
       setLoading(false);
     }

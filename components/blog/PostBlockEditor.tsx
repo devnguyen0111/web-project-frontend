@@ -7,7 +7,13 @@ import {
   getBlockTypeLabel,
   POST_BLOCK_TYPES,
 } from "@/lib/post-blocks";
-import type { PostBlock, PostBlockType, PostImageSize } from "@/lib/types";
+import type {
+  PostBlock,
+  PostBlockType,
+  PostImageSize,
+  PostCalloutTone,
+  PostEmbedProvider,
+} from "@/lib/types";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, Textarea } from "@/components/ui";
 
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -117,6 +123,57 @@ export function PostBlockEditor({
     } finally {
       setUploading(blockKey, false);
     }
+  }
+
+  function addTodoItem(index: number) {
+    const block = blocks[index];
+    if (!block || block.type !== "todo") {
+      return;
+    }
+
+    updateBlock(index, {
+      ...block,
+      todoItems: [...block.todoItems, { text: "", checked: false }],
+    });
+  }
+
+  function updateTodoItem(
+    index: number,
+    todoIndex: number,
+    next: { text?: string; checked?: boolean },
+  ) {
+    const block = blocks[index];
+    if (!block || block.type !== "todo") {
+      return;
+    }
+
+    const nextItems = block.todoItems.map((item, currentIndex) =>
+      currentIndex === todoIndex
+        ? {
+            ...item,
+            text: next.text ?? item.text,
+            checked: next.checked ?? item.checked,
+          }
+        : item,
+    );
+
+    updateBlock(index, {
+      ...block,
+      todoItems: nextItems,
+    });
+  }
+
+  function removeTodoItem(index: number, todoIndex: number) {
+    const block = blocks[index];
+    if (!block || block.type !== "todo") {
+      return;
+    }
+
+    const nextItems = block.todoItems.filter((_, currentIndex) => currentIndex !== todoIndex);
+    updateBlock(index, {
+      ...block,
+      todoItems: nextItems.length > 0 ? nextItems : [{ text: "", checked: false }],
+    });
   }
 
   return (
@@ -378,6 +435,133 @@ export function PostBlockEditor({
                   />
                 </div>
               </>
+            ) : null}
+
+            {block.type === "divider" ? (
+              <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                Divider block does not require additional fields.
+              </p>
+            ) : null}
+
+            {block.type === "embed" ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`block-embed-provider-${index}`}>Provider</Label>
+                  <Select
+                    id={`block-embed-provider-${index}`}
+                    value={block.provider}
+                    onChange={(event) =>
+                      updateBlock(index, {
+                        ...block,
+                        provider: event.target.value as PostEmbedProvider,
+                      })
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="youtube">YouTube</option>
+                    <option value="twitter">Twitter</option>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`block-embed-url-${index}`}>Embed URL</Label>
+                  <Input
+                    id={`block-embed-url-${index}`}
+                    value={block.embedUrl}
+                    onChange={(event) =>
+                      updateBlock(index, {
+                        ...block,
+                        embedUrl: event.target.value,
+                      })
+                    }
+                    placeholder="https://..."
+                    disabled={disabled}
+                  />
+                </div>
+              </>
+            ) : null}
+
+            {block.type === "callout" ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`block-callout-tone-${index}`}>Tone</Label>
+                  <Select
+                    id={`block-callout-tone-${index}`}
+                    value={block.tone || "info"}
+                    onChange={(event) =>
+                      updateBlock(index, {
+                        ...block,
+                        tone: event.target.value as PostCalloutTone,
+                      })
+                    }
+                    disabled={disabled}
+                  >
+                    <option value="info">Info</option>
+                    <option value="success">Success</option>
+                    <option value="warning">Warning</option>
+                    <option value="danger">Danger</option>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={`block-callout-text-${index}`}>Callout text</Label>
+                  <Textarea
+                    id={`block-callout-text-${index}`}
+                    value={block.text}
+                    onChange={(event) =>
+                      updateBlock(index, {
+                        ...block,
+                        text: event.target.value,
+                      })
+                    }
+                    className="min-h-[120px]"
+                    disabled={disabled}
+                  />
+                </div>
+              </>
+            ) : null}
+
+            {block.type === "todo" ? (
+              <div className="space-y-2">
+                <Label>Todo items</Label>
+                {block.todoItems.map((item, todoIndex) => (
+                  <div key={`todo-${todoIndex}`} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={item.checked === true}
+                      onChange={(event) =>
+                        updateTodoItem(index, todoIndex, { checked: event.target.checked })
+                      }
+                      disabled={disabled}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <Input
+                      value={item.text}
+                      onChange={(event) =>
+                        updateTodoItem(index, todoIndex, { text: event.target.value })
+                      }
+                      placeholder={`Todo #${todoIndex + 1}`}
+                      disabled={disabled}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      onClick={() => removeTodoItem(index, todoIndex)}
+                      disabled={disabled}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => addTodoItem(index)}
+                  disabled={disabled}
+                >
+                  + Add todo item
+                </Button>
+              </div>
             ) : null}
           </CardContent>
         </Card>

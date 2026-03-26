@@ -4,6 +4,12 @@ import type {
   AuthPayload,
   AuthUser,
   RegisterResponse,
+  TwoFactorDisablePayload,
+  TwoFactorDisableResponse,
+  TwoFactorEnableResponse,
+  TwoFactorLoginVerifyResponse,
+  TwoFactorSetupVerifyResponse,
+  TwoFactorVerifyPayload,
   VerifyEmailResponse,
 } from "@/lib/types";
 
@@ -50,7 +56,43 @@ export async function login(payload: LoginPayload) {
     skipAuth: true,
   });
 
-  setTokens(response.data.accessToken, response.data.refreshToken);
+  if (!response.data.requiresTwoFactor) {
+    setTokens(response.data.accessToken, response.data.refreshToken);
+  }
+
+  return response.data;
+}
+
+export async function enableTwoFactor() {
+  const response = await apiRequest<TwoFactorEnableResponse>("/auth/2fa/enable", {
+    method: "POST",
+  });
+
+  return response.data;
+}
+
+export async function verifyTwoFactor(payload: TwoFactorVerifyPayload) {
+  const response = await apiRequest<
+    TwoFactorLoginVerifyResponse | TwoFactorSetupVerifyResponse
+  >("/auth/2fa/verify", {
+    method: "POST",
+    body: payload,
+    skipAuth: true,
+  });
+
+  if ("accessToken" in response.data && "refreshToken" in response.data) {
+    setTokens(response.data.accessToken, response.data.refreshToken);
+  }
+
+  return response.data;
+}
+
+export async function disableTwoFactor(payload: TwoFactorDisablePayload) {
+  const response = await apiRequest<TwoFactorDisableResponse>("/auth/2fa/disable", {
+    method: "POST",
+    body: payload,
+  });
+
   return response.data;
 }
 

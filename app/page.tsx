@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { MotionDiv, MotionSection } from "@/components/motion";
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 
@@ -32,7 +32,7 @@ export default function Home() {
                 className="space-y-4"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.38, delay: 0.05, ease: smoothEase }}
+                transition={{ duration: 0.28, delay: 0.05, ease: smoothEase }}
               >
                 <Badge className="bg-white/20 text-white">shadcn-first rebuild</Badge>
                 <h1 className="max-w-2xl text-3xl font-semibold leading-tight md:text-5xl">
@@ -97,7 +97,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         {highlights.map((item, index) => (
           <MotionDiv
@@ -119,3 +119,4 @@ export default function Home() {
     </main>
   );
 }
+

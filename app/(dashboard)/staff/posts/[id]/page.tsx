@@ -56,7 +56,7 @@ export default function StaffPendingPostDetailPage() {
   }
 
   async function handleApprove() {
-    if (!post) {
+    if (!post || acting) {
       return;
     }
 
@@ -73,7 +73,7 @@ export default function StaffPendingPostDetailPage() {
 
   async function handleReject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!post) {
+    if (!post || acting) {
       return;
     }
 
@@ -138,7 +138,7 @@ export default function StaffPendingPostDetailPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}

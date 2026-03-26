@@ -1,5 +1,7 @@
 import { apiRequest } from "@/lib/api/http";
 import type {
+  BlogPostCardV2,
+  BlogPostDetailV2,
   Category,
   CategoryScope,
   Comment,
@@ -100,7 +102,7 @@ interface UploadedPostImage {
   url: string;
 }
 
-const inFlightPostBySlugRequests = new Map<string, Promise<Post>>();
+const inFlightPostBySlugRequests = new Map<string, Promise<BlogPostDetailV2>>();
 
 function buildQuery(query: PostsQuery | CommentsQuery) {
   const params = new URLSearchParams();
@@ -115,7 +117,7 @@ function buildQuery(query: PostsQuery | CommentsQuery) {
 }
 
 export async function listPublishedPosts(query: PostsQuery = {}) {
-  const response = await apiRequest<PaginatedResult<Post>>(
+  const response = await apiRequest<PaginatedResult<BlogPostCardV2>>(
     `/posts${buildQuery(query)}`,
     { method: "GET", skipAuth: true },
   );
@@ -147,9 +149,8 @@ export async function getPostBySlug(slug: string) {
   }
 
   const request = (async () => {
-    const response = await apiRequest<Post>(`/posts/${slug}`, {
+    const response = await apiRequest<BlogPostDetailV2>(`/posts/${slug}`, {
       method: "GET",
-      skipAuth: true,
     });
 
     return response.data;
@@ -280,6 +281,17 @@ export async function listComments(postId: string, query: CommentsQuery = {}) {
     {
       method: "GET",
       skipAuth: true,
+    },
+  );
+
+  return response.data;
+}
+
+export async function toggleCommentLike(commentId: string) {
+  const response = await apiRequest<{ liked: boolean; likesCount: number }>(
+    `/comments/${commentId}/like`,
+    {
+      method: "POST",
     },
   );
 

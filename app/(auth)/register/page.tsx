@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from "@/components/ui";
 import { useAuth } from "@/providers/auth-provider";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, user, initializing } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!initializing && user) {
+      router.replace("/dashboard");
+    }
+  }, [initializing, router, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,16 +80,16 @@ export default function RegisterPage() {
               />
             </div>
 
-            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+            {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Creating..." : "Create account"}
             </Button>
           </form>
 
-          <p className="mt-4 text-sm text-slate-600">
+          <p className="mt-4 text-sm text-[var(--text-secondary)]">
             Already registered?{" "}
-            <Link href="/login" className="font-semibold text-cyan-700 hover:underline">
+            <Link href="/login" className="font-semibold text-[var(--primary)] hover:underline">
               Sign in
             </Link>
           </p>

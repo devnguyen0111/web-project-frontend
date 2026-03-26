@@ -38,6 +38,8 @@ If your backend runs elsewhere, update `.env.local` before starting the frontend
 - `/` - landing page with links to blog and dashboard.
 - `/blog` - published post list with search, category filter, tag filter, and pagination.
 - `/blog/[slug]` - post detail with block rendering, likes, bookmarks, comments, replies, edit/delete/hide comment actions, and poll voting.
+- `/store` - storefront for digital products and custom-order listings, with search, pagination, and store-level reviews.
+- `/store/[slug]` - product detail, buy/cart/custom order request flow, and product reviews with staff replies.
 - `/subscription` - public subscription page with pricing, billing cycle toggle, wallet-aware CTA, and purchase flow.
 - `/subscriptions` - legacy route redirected to `/subscription`.
 
@@ -63,6 +65,11 @@ Auth flow in the UI:
 - `/dashboard/posts/[id]/edit` - edit an existing post and send it back to moderation if needed.
 - `/dashboard/profile` - update full name and upload avatar.
 - `/dashboard/wallet` - wallet balance, transaction history, deposit requests, and PayOS top-up flow.
+- `/tickets` - role-aware support workspace.
+  - `author`: create ticket + list my tickets.
+  - `staff/admin`: inbox tabs (`Assigned to me`, `Unassigned`, `All`) with assignment/status actions.
+- `/tickets/[id]` - ticket conversation detail with ownership-aware actions and staff internal controls.
+- `/notifications` - notification center with realtime updates and direct ticket CTA from ticket metadata.
 - `/dashboard/subscription` - legacy route redirected to `/settings/subscription`.
 
 ### Settings
@@ -74,6 +81,11 @@ Auth flow in the UI:
 - `/staff` - moderation queue for pending and published posts.
 - `/staff/posts/[id]` - pending post detail view with approve/reject actions.
 - `/staff/taxonomy` - category and tag CRUD shared with admin access.
+- `/staff/store/dashboard` - store operations summary cards.
+- `/staff/store/orders` - store order operations list.
+- `/staff/store/orders/[id]` - quote and delivery workflow detail.
+- `/staff/store/products` - product management + pending product moderation queue.
+- `/staff/store/reviews` - product/store review workspace with staff reply tools.
 
 ### Admin
 
@@ -82,6 +94,7 @@ Auth flow in the UI:
 - `/admin/taxonomy` - category and tag CRUD.
 - `/admin/posts/[id]` - pending post detail view for moderation.
 - `/admin/wallet` - manual wallet adjustment tools.
+- `/admin/tickets` - compatibility alias redirecting to `/tickets` (shared staff/admin ticket inbox).
 
 ## Subscription UX
 
@@ -128,6 +141,10 @@ The navigation and guards follow the role helpers in `lib/rbac.ts`:
 
 - `author`, `staff`, `admin` can access `/dashboard`.
 - `staff`, `admin` can access moderation and taxonomy screens.
+- `author`, `staff`, `admin` can access ticket routes.
+  - owner-only actions on ticket detail: close, reopen, rate.
+  - staff/admin actions on ticket detail: assign, status update, internal note.
+- `staff`, `admin` can access `/staff/store/*` operations routes.
 - `admin` can access `/admin`, `/admin/users`, `/admin/taxonomy`, `/admin/posts/[id]`, and `/admin/wallet`.
 
 ## Project Structure

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPostBySlug } from "@/lib/api/blog";
-import type { Post } from "@/lib/types";
+import type { BlogPostDetailV2 } from "@/lib/types";
 
-function createPostEnvelope(post: Post) {
+function createPostEnvelope(post: BlogPostDetailV2) {
   return new Response(JSON.stringify({ success: true, data: post }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -31,19 +31,32 @@ describe("blog api", () => {
 
     resolveFetch(
       createPostEnvelope({
-        _id: "post-1",
-        authorId: "author-1",
+        id: "post-1",
         title: "Strict mode dedupe",
         slug: "strict-mode-dedupe",
+        flags: {
+          isExclusive: false,
+          isFeatured: false,
+          isPinned: false,
+        },
+        author: {
+          id: "author-1",
+          fullName: "Author",
+          level: 3,
+        },
+        metrics: {
+          views: 10,
+          likesCount: 1,
+          commentsCount: 2,
+          bookmarksCount: 0,
+          readTimeMinutes: 1,
+        },
+        access: {
+          locked: false,
+          upgradeUrl: "/subscription",
+        },
         blocks: [{ type: "paragraph", text: "content" }],
-        tags: [],
-        status: "published",
-        views: 10,
-        likesCount: 1,
-        bookmarksCount: 0,
-        commentsCount: 2,
-        createdAt: "2026-03-17T00:00:00.000Z",
-        updatedAt: "2026-03-17T00:00:00.000Z",
+        toc: [],
       }),
     );
 

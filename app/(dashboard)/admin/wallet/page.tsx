@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
@@ -184,7 +184,7 @@ export default function AdminWalletPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -404,3 +404,4 @@ export default function AdminWalletPage() {
     </main>
   );
 }
+

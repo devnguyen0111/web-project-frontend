@@ -7,7 +7,7 @@ import { MotionDiv, MotionSection } from "@/components/motion";
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Spinner } from "@/components/ui";
 import { approvePost, deletePost, listPendingPosts, listPublishedPosts, rejectPost } from "@/lib/api/blog";
 import { getPostPreviewText } from "@/lib/post-blocks";
-import type { Post } from "@/lib/types";
+import type { BlogPostCardV2, Post } from "@/lib/types";
 import { useAuth } from "@/providers/auth-provider";
 
 const PAGE_SIZE = 10;
@@ -18,13 +18,14 @@ export default function StaffModerationPage() {
   const canManageUsers = user?.role === "admin";
   const canManageTaxonomy = user?.role === "staff" || user?.role === "admin";
   const [pendingPosts, setPendingPosts] = useState<Post[]>([]);
-  const [approvedPosts, setApprovedPosts] = useState<Post[]>([]);
+  const [approvedPosts, setApprovedPosts] = useState<BlogPostCardV2[]>([]);
   const [pendingPage, setPendingPage] = useState(1);
   const [approvedPage, setApprovedPage] = useState(1);
   const [pendingInfo, setPendingInfo] = useState({ total: 0, totalPages: 1 });
   const [approvedInfo, setApprovedInfo] = useState({ total: 0, totalPages: 1 });
   const [reasonByPost, setReasonByPost] = useState<Record<string, string>>({});
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [actioningPostId, setActioningPostId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -66,23 +67,40 @@ export default function StaffModerationPage() {
   );
 
   async function handleApprove(id: string) {
+    if (actioningPostId) {
+      return;
+    }
+
+    setActioningPostId(id);
+    setError("");
+
     try {
       await approvePost(id);
       await loadModerationData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Approve failed");
+    } finally {
+      setActioningPostId(null);
     }
   }
 
   async function handleReject(event: FormEvent<HTMLFormElement>, id: string) {
     event.preventDefault();
+    if (actioningPostId) {
+      return;
+    }
+
     const reason = reasonByPost[id] || "Needs revision";
+    setActioningPostId(id);
+    setError("");
 
     try {
       await rejectPost(id, reason);
       await loadModerationData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reject failed");
+    } finally {
+      setActioningPostId(null);
     }
   }
 
@@ -114,7 +132,7 @@ export default function StaffModerationPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -131,6 +149,18 @@ export default function StaffModerationPage() {
             </CardHeader>
             {canManageUsers || canManageTaxonomy ? (
               <CardContent className="flex flex-wrap gap-2 pt-0">
+                <Link
+                  href="/tickets"
+                  className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Ticket inbox
+                </Link>
+                <Link
+                  href="/staff/store/dashboard"
+                  className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Store ops
+                </Link>
                 {canManageTaxonomy ? (
                   <Link
                     href="/staff/taxonomy"
@@ -214,10 +244,18 @@ export default function StaffModerationPage() {
               <Card>
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle className="text-lg">{post.title}</CardTitle>
+                  <CardTitle className="text-lg">{post.title}</CardTitle>
                     <Badge>{post.status}</Badge>
                   </div>
                   <CardDescription className="line-clamp-3">{getPostPreviewText(post)}</CardDescription>
+                  {post.rejectionReason ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-700">
+                        Rejection reason
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap">{post.rejectionReason}</p>
+                    </div>
+                  ) : null}
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 md:flex-row md:items-center">
                   <Link
@@ -226,8 +264,12 @@ export default function StaffModerationPage() {
                   >
                     View detail
                   </Link>
-                  <Button variant="secondary" onClick={() => handleApprove(post._id)}>
-                    Approve
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleApprove(post._id)}
+                    disabled={loading || Boolean(actioningPostId)}
+                  >
+                    {actioningPostId === post._id ? "Processing..." : "Approve"}
                   </Button>
                   <form
                     onSubmit={(event) => handleReject(event, post._id)}
@@ -239,9 +281,14 @@ export default function StaffModerationPage() {
                         setReasonByPost((prev) => ({ ...prev, [post._id]: event.target.value }))
                       }
                       placeholder="Reject reason"
+                      disabled={loading || Boolean(actioningPostId)}
                     />
-                    <Button type="submit" variant="destructive">
-                      Reject
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      disabled={loading || Boolean(actioningPostId)}
+                    >
+                      {actioningPostId === post._id ? "Processing..." : "Reject"}
                     </Button>
                   </form>
                 </CardContent>
@@ -287,7 +334,7 @@ export default function StaffModerationPage() {
 
           {approvedPosts.map((post, index) => (
             <MotionDiv
-              key={post._id}
+              key={post.id}
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
@@ -297,17 +344,17 @@ export default function StaffModerationPage() {
                 <CardHeader>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-lg">{post.title}</CardTitle>
-                    <Badge>{post.status}</Badge>
+                    <Badge>published</Badge>
                   </div>
-                  <CardDescription className="line-clamp-3">{getPostPreviewText(post)}</CardDescription>
+                  <CardDescription className="line-clamp-3">{post.excerpt}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
                     variant="destructive"
-                    onClick={() => handleDeleteApproved(post._id)}
-                    disabled={deletingPostId === post._id}
+                    onClick={() => handleDeleteApproved(post.id)}
+                    disabled={deletingPostId === post.id}
                   >
-                    {deletingPostId === post._id ? "Deleting..." : "Delete post"}
+                    {deletingPostId === post.id ? "Deleting..." : "Delete post"}
                   </Button>
                 </CardContent>
               </Card>
@@ -318,3 +365,4 @@ export default function StaffModerationPage() {
     </main>
   );
 }
+

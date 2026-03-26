@@ -70,6 +70,7 @@ export default function EditPostPage() {
   const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const [pollEndsAt, setPollEndsAt] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -126,6 +127,7 @@ export default function EditPostPage() {
         setTagIds(post.tags ?? []);
         setCoverImageUrl(post.coverImageUrl ?? "");
         setCurrentStatus(post.status);
+        setRejectionReason(post.rejectionReason ?? "");
 
         if (post.poll) {
           const isPermanent = post.poll.isPermanent ?? !post.poll.endsAt;
@@ -339,7 +341,7 @@ export default function EditPostPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           className="flex items-center justify-between"
@@ -355,6 +357,31 @@ export default function EditPostPage() {
           </Link>
           {currentStatus ? <Badge>{currentStatus}</Badge> : null}
         </MotionDiv>
+
+        {rejectionReason ? (
+          <MotionDiv
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.26, ease: smoothEase }}
+          >
+            <Card className="border-amber-200 bg-amber-50/80">
+              <CardHeader>
+                <Badge className="w-fit bg-amber-500 text-white hover:bg-amber-500">
+                  Rejected
+                </Badge>
+                <CardTitle className="text-lg">Rejection reason</CardTitle>
+                <CardDescription>
+                  Fix the issues below, then resubmit the post for moderation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap rounded-xl border border-amber-200 bg-white p-4 text-sm text-amber-900">
+                  {rejectionReason}
+                </p>
+              </CardContent>
+            </Card>
+          </MotionDiv>
+        ) : null}
 
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -92,7 +92,7 @@ export default function DashboardPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -131,6 +131,12 @@ export default function DashboardPage() {
                 className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100"
               >
                 Subscription & quota
+              </Link>
+              <Link
+                href="/settings/security"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Security settings
               </Link>
             </CardContent>
           </Card>
@@ -196,6 +202,17 @@ export default function DashboardPage() {
                           <p className="mt-1 text-xs text-slate-500">
                             Created: {new Date(post.createdAt).toLocaleDateString()}
                           </p>
+                          {post.rejectionReason ? (
+                            <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-700">
+                                Rejection reason
+                              </p>
+                              <p className="mt-1 whitespace-pre-wrap">{post.rejectionReason}</p>
+                              <p className="mt-2 text-xs text-amber-800">
+                                Update the post and resubmit after addressing this feedback.
+                              </p>
+                            </div>
+                          ) : null}
                           <div className="mt-2">
                             <Link
                               href={`/dashboard/posts/${post._id}/edit`}
@@ -321,3 +338,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { MotionDiv, MotionSection } from "@/components/motion";
@@ -16,7 +16,7 @@ export default function AdminControlCenterPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -104,8 +104,60 @@ export default function AdminControlCenterPage() {
               </Link>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Admin dashboard analytics</CardTitle>
+              <CardDescription>
+                Monitor stats, revenue and user growth trends.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/admin/dashboard"
+                className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Open analytics
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Audit logs</CardTitle>
+              <CardDescription>
+                Filter mutation logs by action, severity, user and date range.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/admin/audit-logs"
+                className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Open audit logs
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Ticket operations</CardTitle>
+              <CardDescription>
+                Assign and manage ticket status as staff/admin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link
+                href="/admin/tickets"
+                className="inline-flex rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Open ticket ops
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </MotionSection>
     </main>
   );
 }
+

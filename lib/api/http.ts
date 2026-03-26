@@ -4,7 +4,7 @@ import {
   getRefreshToken,
   setTokens,
 } from "@/lib/api/token-store";
-import type { ApiEnvelope, AuthPayload } from "@/lib/types";
+import type { ApiEnvelope, AuthLoginSuccessPayload } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/api/v1";
@@ -101,7 +101,7 @@ async function refreshAccessToken() {
       return null;
     }
 
-    const payload = await parseJson<AuthPayload>(response);
+    const payload = await parseJson<AuthLoginSuccessPayload>(response);
     setTokens(payload.data.accessToken, payload.data.refreshToken);
     return payload.data.accessToken;
   })();

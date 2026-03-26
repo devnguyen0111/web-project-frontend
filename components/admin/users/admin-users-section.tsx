@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
   Input,
+  Modal,
   Select,
   Spinner,
 } from "@/components/ui";
@@ -292,7 +293,7 @@ function AdminUsersContent() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -434,21 +435,48 @@ function AdminUsersContent() {
       </MotionSection>
 
       {actionUser ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
-          onClick={closeActionModal}
+        <Modal
+          open={Boolean(actionUser)}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeActionModal();
+            }
+          }}
+          title={`Manage ${actionUser.fullName}`}
+          description={
+            modalStep === "details"
+              ? "Review full user information before proceeding to actions."
+              : `Choose an action for ${actionUser.email} and apply it.`
+          }
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeActionModal} disabled={hasPendingUpdate}>
+                Cancel
+              </Button>
+              {modalStep === "details" ? (
+                <Button onClick={() => setModalStep("action")} disabled={hasPendingUpdate}>
+                  Continue To Actions
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModalStep("details")}
+                    disabled={hasPendingUpdate}
+                  >
+                    Back To Details
+                  </Button>
+                  <Button onClick={() => void handleConfirmAction()} disabled={confirmDisabled}>
+                    {updatingUserId === actionUser.id ? "Processing..." : "Apply action"}
+                  </Button>
+                </>
+              )}
+            </>
+          }
+          className="max-w-xl"
         >
-          <Card className="w-full max-w-xl" onClick={(event) => event.stopPropagation()}>
-            <CardHeader>
-              <Badge className="w-fit">User action</Badge>
-              <CardTitle>Manage {actionUser.fullName}</CardTitle>
-              <CardDescription>
-                {modalStep === "details"
-                  ? "Review full user information before proceeding to actions."
-                  : `Choose an action for ${actionUser.email} and apply it.`}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <Badge className="w-fit">User action</Badge>
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
                   User Information
@@ -630,29 +658,8 @@ function AdminUsersContent() {
                   ) : null}
                 </>
               ) : null}
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={closeActionModal} disabled={hasPendingUpdate}>
-                  Cancel
-                </Button>
-                {modalStep === "details" ? (
-                  <Button onClick={() => setModalStep("action")} disabled={hasPendingUpdate}>
-                    Continue To Actions
-                  </Button>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={() => setModalStep("details")} disabled={hasPendingUpdate}>
-                      Back To Details
-                    </Button>
-                    <Button onClick={() => void handleConfirmAction()} disabled={confirmDisabled}>
-                      {updatingUserId === actionUser.id ? "Processing..." : "Apply action"}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          </div>
+        </Modal>
       ) : null}
     </main>
   );
@@ -661,3 +668,4 @@ function AdminUsersContent() {
 export function AdminUsersSection() {
   return <AdminUsersContent />;
 }
+

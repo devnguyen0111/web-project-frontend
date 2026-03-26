@@ -5,47 +5,72 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-200 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 disabled:pointer-events-none disabled:opacity-60",
+  "inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] border border-transparent text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-200 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-60",
   {
     variants: {
       variant: {
-        default:
-          "bg-cyan-500 text-white shadow-md shadow-cyan-500/30 hover:bg-cyan-400",
-        outline:
-          "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+        primary:
+          "bg-[var(--primary)] text-white shadow-sm hover:bg-[var(--primary-hover)] focus-visible:ring-[var(--focus-ring)]",
         secondary:
-          "bg-slate-900 text-white hover:bg-slate-800",
-        ghost: "text-slate-700 hover:bg-slate-100",
-        destructive: "bg-rose-600 text-white hover:bg-rose-500",
-        link: "text-cyan-700 underline-offset-4 hover:underline",
+          "border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:ring-[var(--focus-ring)]",
+        ghost:
+          "bg-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:ring-[var(--focus-ring)]",
+        danger:
+          "bg-[var(--danger)] text-white hover:brightness-95 focus-visible:ring-[var(--danger-soft)]",
+        // Backward-compatible aliases.
+        default:
+          "bg-[var(--primary)] text-white shadow-sm hover:bg-[var(--primary-hover)] focus-visible:ring-[var(--focus-ring)]",
+        outline:
+          "border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:ring-[var(--focus-ring)]",
+        destructive:
+          "bg-[var(--danger)] text-white hover:brightness-95 focus-visible:ring-[var(--danger-soft)]",
+        link: "text-[var(--primary)] underline-offset-4 hover:underline focus-visible:ring-[var(--focus-ring)]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 px-3 py-2 text-xs",
-        xs: "h-8 px-2.5 py-1 text-xs",
-        lg: "h-11 px-5 py-2",
-        icon: "h-10 w-10",
+        sm: "min-h-11 px-3 text-sm",
+        md: "min-h-11 px-4 text-sm",
+        lg: "min-h-11 px-5 text-base",
+        icon: "h-11 w-11 min-h-11 px-0",
+        // Backward-compatible aliases.
+        default: "min-h-11 px-4 text-sm",
+        xs: "min-h-11 px-3 text-sm",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "primary",
+      size: "md",
     },
   },
 );
+
+interface ButtonProps
+  extends ButtonPrimitive.Props,
+    VariantProps<typeof buttonVariants> {
+  loading?: boolean;
+}
 
 function Button({
   className,
   variant,
   size,
+  children,
+  loading = false,
+  disabled,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {loading ? (
+        <span className="spinner spin inline-block h-4 w-4 border-2" aria-hidden="true" />
+      ) : null}
+      {children}
+    </ButtonPrimitive>
   );
 }
 

@@ -16,7 +16,6 @@ import type { PayosReturnStatus, PayosReturnStatusQuery, PayosReturnStatusRespon
 
 const REFRESH_INTERVAL_MS = 3000;
 const MAX_POLLING_WINDOW_MS = 2 * 60 * 1000;
-const COIN_TO_VND_RATE = 1000;
 const CANCEL_STATUS_SET = new Set(["CANCELLED", "CANCELED"]);
 const FAILED_STATUS_SET = new Set(["FAILED", "EXPIRED"]);
 const PENDING_STATUS_SET = new Set(["PENDING", "PROCESSING"]);
@@ -106,16 +105,20 @@ function formatMoney(value?: number, currency = "VND") {
   }).format(value);
 }
 
-function toCoinFromStoredVnd(value?: number) {
+function toCoinFromStoredVnd(value?: number, coinToVndRate = 1) {
   if (typeof value !== "number" || Number.isNaN(value)) {
     return undefined;
   }
 
-  return value / COIN_TO_VND_RATE;
+  if (!coinToVndRate || coinToVndRate <= 0) {
+    return undefined;
+  }
+
+  return value / coinToVndRate;
 }
 
-function formatCoins(value?: number) {
-  const coinValue = toCoinFromStoredVnd(value);
+function formatCoins(value?: number, coinToVndRate?: number) {
+  const coinValue = toCoinFromStoredVnd(value, coinToVndRate);
   if (typeof coinValue !== "number" || Number.isNaN(coinValue)) {
     return "-";
   }
@@ -379,6 +382,11 @@ function PayosReturnContent() {
   const Icon = meta.icon;
   const transaction = result?.transaction;
   const walletTopup = result?.walletTopup;
+  const coinToVndRate =
+    walletTopup?.exchangeRate ??
+    (transaction?.amountReal && transaction?.coinAmount
+      ? transaction.amountReal / transaction.coinAmount
+      : undefined);
   const statusText = STATUS_BADGE_LABEL[uiStatus];
   const primaryActionLabel =
     uiStatus === "success" ? "Go to wallet" : "Open wallet";
@@ -414,7 +422,9 @@ function PayosReturnContent() {
               <p className="mt-2 text-base text-slate-600">
                 {result?.message || meta.description}
               </p>
-              <p className="mt-1 text-sm text-slate-500">Display unit: coin (1 coin = 1,000 VND).</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Display unit: coin{coinToVndRate ? ` (1 coin = ${formatMoney(coinToVndRate, walletTopup?.currency ?? "VND")})` : ""}.
+              </p>
               {polling ? (
                 <p className="mt-3 text-sm text-slate-500">
                   Auto-checking payment state every 3 seconds.
@@ -460,7 +470,7 @@ function PayosReturnContent() {
                 <div className="rounded-lg border border-slate-200 p-3">
                   <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Amount</p>
                   <p className="mt-1 font-semibold text-slate-900">
-                    {formatCoins(coinAmount)}
+                    {formatCoins(coinAmount, coinToVndRate)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-200 p-3">
@@ -508,28 +518,37 @@ function PayosReturnContent() {
                   {uiStatus === "success" ? "Coin credited" : "Coin amount"}
                 </p>
                 <p className="mt-1 text-base font-semibold text-slate-900">
-                  {formatCoins(walletTopup?.coinAmount ?? transaction?.coinAmount)}
+                  {formatCoins(
+                    walletTopup?.coinAmount ?? transaction?.coinAmount,
+                    coinToVndRate,
+                  )}
                 </p>
               </div>
 
               <div className="rounded-lg border border-slate-200 p-3">
                 <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Exchange rate</p>
                 <p className="mt-1 font-semibold text-slate-900">
-                  1 coin = {formatMoney(COIN_TO_VND_RATE, walletTopup?.currency ?? "VND")}
+                  1 coin = {formatMoney(coinToVndRate, walletTopup?.currency ?? "VND")}
                 </p>
               </div>
 
               <div className="rounded-lg border border-slate-200 p-3">
                 <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Balance before</p>
                 <p className="mt-1 font-semibold text-slate-900">
-                  {formatCoins(walletTopup?.balanceBefore ?? transaction?.balanceBefore)}
+                  {formatCoins(
+                    walletTopup?.balanceBefore ?? transaction?.balanceBefore,
+                    coinToVndRate,
+                  )}
                 </p>
               </div>
 
               <div className="rounded-lg border border-slate-200 p-3">
                 <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Balance after</p>
                 <p className="mt-1 font-semibold text-slate-900">
-                  {formatCoins(walletTopup?.balanceAfter ?? transaction?.balanceAfter)}
+                  {formatCoins(
+                    walletTopup?.balanceAfter ?? transaction?.balanceAfter,
+                    coinToVndRate,
+                  )}
                 </p>
               </div>
 

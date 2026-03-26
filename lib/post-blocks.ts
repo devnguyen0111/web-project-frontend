@@ -7,6 +7,10 @@ export const POST_BLOCK_TYPES: PostBlockType[] = [
   "list",
   "image",
   "code",
+  "divider",
+  "embed",
+  "callout",
+  "todo",
 ];
 
 export function getBlockTypeLabel(type: PostBlockType): string {
@@ -23,6 +27,14 @@ export function getBlockTypeLabel(type: PostBlockType): string {
       return "Image";
     case "code":
       return "Code";
+    case "divider":
+      return "Divider";
+    case "embed":
+      return "Embed";
+    case "callout":
+      return "Callout";
+    case "todo":
+      return "Todo";
     default:
       return type;
   }
@@ -45,6 +57,14 @@ export function createEmptyPostBlock(
       return { id, type, url: "", alt: "", caption: "", size: "medium" };
     case "code":
       return { id, type, code: "", language: "" };
+    case "divider":
+      return { id, type };
+    case "embed":
+      return { id, type, provider: "youtube", embedUrl: "" };
+    case "callout":
+      return { id, type, tone: "info", text: "" };
+    case "todo":
+      return { id, type, todoItems: [{ text: "", checked: false }] };
     default:
       return { id, type: "paragraph", text: "" };
   }
@@ -131,6 +151,65 @@ export function normalizePostBlocksForSubmit(blocks: PostBlock[]): PostBlock[] {
         });
         return;
       }
+      case "divider": {
+        normalized.push({
+          id,
+          type: "divider",
+        });
+        return;
+      }
+      case "embed": {
+        const embedUrl = block.embedUrl.trim();
+        if (!embedUrl) {
+          return;
+        }
+
+        normalized.push({
+          id,
+          type: "embed",
+          provider: block.provider === "twitter" ? "twitter" : "youtube",
+          embedUrl,
+        });
+        return;
+      }
+      case "callout": {
+        const text = block.text.trim();
+        if (!text) {
+          return;
+        }
+
+        normalized.push({
+          id,
+          type: "callout",
+          tone:
+            block.tone === "success" ||
+            block.tone === "warning" ||
+            block.tone === "danger"
+              ? block.tone
+              : "info",
+          text,
+        });
+        return;
+      }
+      case "todo": {
+        const todoItems = block.todoItems
+          .map((item) => ({
+            text: item.text.trim(),
+            checked: item.checked === true,
+          }))
+          .filter((item) => item.text.length > 0);
+
+        if (todoItems.length === 0) {
+          return;
+        }
+
+        normalized.push({
+          id,
+          type: "todo",
+          todoItems,
+        });
+        return;
+      }
       default:
         return;
     }
@@ -158,6 +237,14 @@ export function extractTextFromBlocks(blocks: PostBlock[] | undefined): string {
         );
       case "code":
         return block.code ? [block.code.slice(0, 300)] : [];
+      case "callout":
+        return block.text ? [block.text] : [];
+      case "todo":
+        return block.todoItems.map((item) => item.text);
+      case "embed":
+        return block.embedUrl ? [block.embedUrl] : [];
+      case "divider":
+        return [];
       default:
         return [];
     }

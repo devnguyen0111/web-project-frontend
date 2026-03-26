@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Badge, Button, Textarea } from "@/components/ui";
+import { renderMarkdownLite } from "@/lib/markdown-lite";
 import type { Comment, Role } from "@/lib/types";
 
 type CommentActionMode = "reply" | "edit" | "hide" | null;
+const HIDDEN_BY_STAFF_TEXT = "Hidden by staff";
 
 interface CommentItemProps {
   comment: Comment;
@@ -16,6 +18,7 @@ interface CommentItemProps {
   onEdit?: (commentId: string, content: string) => Promise<void>;
   onDelete?: (commentId: string) => Promise<void>;
   onHide?: (commentId: string, reason?: string) => Promise<void>;
+  onLike?: (commentId: string) => Promise<{ liked: boolean; likesCount: number }>;
 }
 
 function getInitials(fullName?: string | null) {
@@ -42,20 +45,27 @@ function CommentItem({
   onEdit,
   onDelete,
   onHide,
+  onLike,
 }: CommentItemProps) {
   const indent = Math.max((comment.depth - 1) * 16, 0);
   const [activeMode, setActiveMode] = useState<CommentActionMode>(null);
   const [inputValue, setInputValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(comment.likesCount);
 
   const isAuthor = Boolean(currentUserId) && currentUserId === comment.authorId;
-  const canReply = isAuthenticated && Boolean(onReply) && comment.depth < 3;
-  const canEdit = isAuthor && Boolean(onEdit);
-  const canDelete = isAuthor && Boolean(onDelete);
+  const canReply = isAuthenticated && Boolean(onReply) && comment.depth < 3 && !comment.isHidden;
+  const canEdit = isAuthor && Boolean(onEdit) && !comment.isHidden;
+  const canDelete = isAuthor && Boolean(onDelete) && !comment.isHidden;
   const canHide =
     Boolean(onHide) &&
     (currentUserRole === "staff" || currentUserRole === "admin");
+
+  useEffect(() => {
+    setLikesCount(comment.likesCount);
+  }, [comment.likesCount]);
 
   function openComposer(mode: Exclude<CommentActionMode, null>) {
     setError("");
@@ -132,6 +142,27 @@ function CommentItem({
     }
   }
 
+  async function handleLike() {
+    if (!onLike || !isAuthenticated) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const next = await onLike(comment._id);
+      setLiked(next.liked);
+      setLikesCount(next.likesCount);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to like this comment",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div
       style={{ marginLeft: indent }}
@@ -161,12 +192,34 @@ function CommentItem({
             {comment.parentId ? <Badge>reply</Badge> : null}
           </div>
 
-          <p className="break-words text-sm leading-6 text-slate-700">
-            {comment.content}
-          </p>
+          {comment.isHidden ? (
+            <p className="break-words text-sm italic leading-6 text-slate-500">
+              {HIDDEN_BY_STAFF_TEXT}
+            </p>
+          ) : (
+            <div
+              className="comment-markdown break-words text-sm leading-6 text-slate-700 [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-slate-300 [&_blockquote]:pl-3 [&_code]:rounded [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:bg-slate-950 [&_pre]:p-3 [&_pre]:text-slate-100 [&_ul]:list-disc [&_ul]:pl-5"
+              dangerouslySetInnerHTML={{
+                __html: renderMarkdownLite(comment.content),
+              }}
+            />
+          )}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-slate-500">
             <span>{new Date(comment.createdAt).toLocaleString()}</span>
+            {isAuthenticated && onLike ? (
+              <Button
+                type="button"
+                variant={liked ? "secondary" : "ghost"}
+                size="xs"
+                onClick={handleLike}
+                disabled={submitting}
+              >
+                {liked ? "Liked" : "Like"} ({likesCount})
+              </Button>
+            ) : (
+              <span>Likes: {likesCount}</span>
+            )}
             {canReply ? (
               <Button
                 type="button"
@@ -274,6 +327,7 @@ interface CommentListProps {
   onEdit?: (commentId: string, content: string) => Promise<void>;
   onDelete?: (commentId: string) => Promise<void>;
   onHide?: (commentId: string, reason?: string) => Promise<void>;
+  onLike?: (commentId: string) => Promise<{ liked: boolean; likesCount: number }>;
 }
 
 export function CommentList({
@@ -285,6 +339,7 @@ export function CommentList({
   onEdit,
   onDelete,
   onHide,
+  onLike,
 }: CommentListProps) {
   if (comments.length === 0) {
     return (
@@ -307,8 +362,10 @@ export function CommentList({
           onEdit={onEdit}
           onDelete={onDelete}
           onHide={onHide}
+          onLike={onLike}
         />
       ))}
     </div>
   );
 }
+

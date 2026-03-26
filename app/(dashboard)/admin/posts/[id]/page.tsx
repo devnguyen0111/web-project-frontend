@@ -56,7 +56,7 @@ export default function AdminPendingPostDetailPage() {
   }
 
   async function handleApprove() {
-    if (!post) {
+    if (!post || acting) {
       return;
     }
 
@@ -64,7 +64,7 @@ export default function AdminPendingPostDetailPage() {
     setError("");
     try {
       await approvePost(post._id);
-      router.push("/staff");
+      router.push("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Approve failed");
       setActing(false);
@@ -73,7 +73,7 @@ export default function AdminPendingPostDetailPage() {
 
   async function handleReject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!post) {
+    if (!post || acting) {
       return;
     }
 
@@ -82,7 +82,7 @@ export default function AdminPendingPostDetailPage() {
 
     try {
       await rejectPost(post._id, rejectReason.trim() || "Needs revision");
-      router.push("/staff");
+      router.push("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reject failed");
       setActing(false);
@@ -110,7 +110,7 @@ export default function AdminPendingPostDetailPage() {
             <CardContent className="p-4 text-sm text-rose-700">{error}</CardContent>
           </Card>
           <Link
-            href="/staff"
+            href="/admin"
             className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Back to moderation queue
@@ -138,7 +138,7 @@ export default function AdminPendingPostDetailPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -150,7 +150,7 @@ export default function AdminPendingPostDetailPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Badge className="w-fit">{post.status}</Badge>
                 <Link
-                  href="/staff"
+                  href="/admin"
                   className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   Back to queue

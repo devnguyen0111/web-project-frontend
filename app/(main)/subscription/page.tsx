@@ -196,7 +196,7 @@ export default function SubscriptionMarketingPage() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <Card className="overflow-hidden border-cyan-200 bg-gradient-to-br from-cyan-500 via-blue-500 to-teal-500 text-white">
           <CardContent className="grid gap-8 p-8 md:grid-cols-[1.25fr_0.75fr]">
@@ -483,3 +483,4 @@ export default function SubscriptionMarketingPage() {
     </main>
   );
 }
+

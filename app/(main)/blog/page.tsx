@@ -1,16 +1,13 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { BlogPostCard } from "@/components/blog/BlogPostCard";
 import { PaginationControls } from "@/components/common/pagination-controls";
 import { MotionDiv, MotionSection } from "@/components/motion";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select, Spinner } from "@/components/ui";
 import { listCategories, listPublishedPosts, listTags } from "@/lib/api/blog";
-import { getPostPreviewText } from "@/lib/post-blocks";
-import type { Category, Post, Tag } from "@/lib/types";
+import type { BlogPostCardV2, Category, Tag } from "@/lib/types";
 
 const PAGE_SIZE = 12;
 const smoothEase = [0.22, 1, 0.36, 1] as const;
@@ -35,7 +32,7 @@ function BlogListPageContent() {
     [searchParams],
   );
 
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<BlogPostCardV2[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [search, setSearch] = useState(appliedFilters.search);
@@ -139,7 +136,7 @@ function BlogListPageContent() {
         className="section-shell space-y-6"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: smoothEase }}
+        transition={{ duration: 0.28, ease: smoothEase }}
       >
         <MotionDiv
           initial={{ opacity: 0, y: 12 }}
@@ -150,7 +147,7 @@ function BlogListPageContent() {
             <CardHeader>
               <CardTitle>Published blog posts</CardTitle>
               <CardDescription>
-                Filter by keyword, category, and tag. Data source is GET /posts.
+                Modern editorial feed with clean SaaS filtering.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -161,7 +158,7 @@ function BlogListPageContent() {
                     id="search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Title or block content keyword"
+                    placeholder="Title or content keyword"
                   />
                 </div>
 
@@ -237,50 +234,16 @@ function BlogListPageContent() {
           </Card>
         ) : null}
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {posts.map((post, index) => (
             <MotionDiv
-              key={post._id}
+              key={`${post.id || post.slug || "post"}-${index}`}
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.3, delay: index * 0.06, ease: smoothEase }}
+              transition={{ duration: 0.3, delay: index * 0.05, ease: smoothEase }}
             >
-              <Card className="flex h-full flex-col overflow-hidden">
-                <div className="relative h-52 w-full bg-slate-100">
-                  {post.coverImageUrl ? (
-                    <Image
-                      src={post.coverImageUrl}
-                      alt={post.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
-                      No cover image
-                    </div>
-                  )}
-                </div>
-                <CardContent className="flex flex-1 flex-col space-y-3 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">
-                    {post.status}
-                  </p>
-                  <h2 className="text-lg font-semibold text-slate-900">{post.title}</h2>
-                  <p className="line-clamp-3 text-sm text-slate-600">
-                    {getPostPreviewText(post)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {post.views} views | {post.likesCount} likes | {post.commentsCount} comments
-                  </p>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="mt-auto inline-flex rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Read detail
-                  </Link>
-                </CardContent>
-              </Card>
+              <BlogPostCard post={post} />
             </MotionDiv>
           ))}
         </div>

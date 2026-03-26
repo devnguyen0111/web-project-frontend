@@ -71,6 +71,7 @@ export async function createDepositRequest(payload: CreateDepositRequestPayload)
         exchangeRate: payload.exchangeRate,
         currency: payload.currency,
         provider: payload.provider ?? "payos",
+        idempotencyKey: payload.idempotencyKey,
       },
     },
   );

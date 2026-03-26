@@ -9,7 +9,7 @@ import { useAuth } from "@/providers/auth-provider";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, initializing } = useAuth();
   const [email, setEmail] = useState("author.phase2@example.com");
   const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
@@ -22,13 +22,30 @@ export default function LoginPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!initializing && user) {
+      router.replace("/dashboard");
+    }
+  }, [initializing, router, user]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      await login({ email, password });
+      const result = await login({ email, password });
+
+      if (result.requiresTwoFactor) {
+        const params = new URLSearchParams({
+          token: result.twoFactorToken,
+          email,
+          expiresInSeconds: String(result.expiresInSeconds),
+        });
+        router.push(`/auth/2fa/verify?${params.toString()}`);
+        return;
+      }
+
       router.push("/dashboard");
     } catch (err) {
       const isUnverifiedEmailError =
@@ -80,21 +97,27 @@ export default function LoginPage() {
             </div>
 
             <div className="text-right">
-              <Link href="/forgot-password" className="text-sm font-medium text-cyan-700 hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-[var(--primary)] hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>
 
-            {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+            {error ? <p className="text-sm text-[var(--danger)]">{error}</p> : null}
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
 
-          <p className="mt-4 text-sm text-slate-600">
+          <p className="mt-4 text-sm text-[var(--text-secondary)]">
             No account yet?{" "}
-            <Link href="/register" className="font-semibold text-cyan-700 hover:underline">
+            <Link
+              href="/register"
+              className="font-semibold text-[var(--primary)] hover:underline"
+            >
               Create one
             </Link>
           </p>
